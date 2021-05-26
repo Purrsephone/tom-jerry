@@ -6,6 +6,7 @@ import math
 import numpy as np
 from nav_msgs.msg import OccupancyGrid
 from itertools import zip_longest
+from q_learning_project.msg import RobotCoord
 
 
 # Given an index and info about map, compute its real coordinate
@@ -75,6 +76,9 @@ class Grid:
 
         # subscribe to the map server
         rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_grid)
+        
+        # publish states 
+        self.state_pub = rospy.Publisher("/q_learning/reward", GameState, queue_size=10)
 
         # wait for things to be set up
         rospy.sleep(1)
@@ -146,15 +150,15 @@ class Grid:
                 temp_sqr.z = x
                 state_list.append(temp_sqr)
 
-        # make the state include all possible combos of mouse and cat positions
+        # make the state include all possible combos of tom and jerry positions
         num_states = len(state_list)
         outer_loop_counter = 0
         for state in state_list:
             inner_loop_counter = 0
             for state2 in state_list:
-                cat = state_list[outer_loop_counter]
-                mouse = state_list[inner_loop_counter]
-                new_state = State(cat, mouse)
+                tom = state_list[outer_loop_counter]
+                jerry = state_list[inner_loop_counter]
+                new_state = State(tom, jerry)
                 self.states.append(new_state)
                 inner_loop_counter += 1
             outer_loop_counter += 1
@@ -278,3 +282,15 @@ class Grid:
     def make_action_list(self):
         for x in range(4):
             self.actions.append(x)
+            
+    def publish_states(self):
+        count = 0 
+        for state in self.states:
+               # publish all states
+                state_msg = RobotCoord()
+                state_msg.move_num = count 
+                state_msg.tom_coord = state.catpos
+                state_msg.jerry_coord = state.mousepos 
+                self.state_pub.publish(state_msg) 
+                count += 1
+
