@@ -1,0 +1,3 @@
+int16 move_num
+RobotCoord tom_coord
+RobotCoord jerry_coord
