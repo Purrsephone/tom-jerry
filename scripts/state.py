@@ -74,7 +74,7 @@ class Grid:
         self.action_matrix = []
 
         # subscribe to the map server
-        rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_map)
+        rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_grid)
 
         # wait for things to be set up
         rospy.sleep(1)

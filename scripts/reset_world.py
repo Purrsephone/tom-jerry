@@ -2,12 +2,13 @@
 
 import rospy
 
-
 from gazebo_msgs.msg import ModelState, ModelStates
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
 from tom_and_jerry_project.msg import QLearningReward
 from std_msgs.msg import Header
 from nav_msgs.msg import OccupancyGrid
+
+from state import convert_to_real_coords, Position, Grid
 
 from random import shuffle
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
@@ -25,13 +26,19 @@ class ResetWorld(object):
 
         # reset position and orientation of the big robot
         self.robot_model_name = "tom"
-        self.robot_reset_position = Point(x=0.0, y=0.0, z=0.0)
-        self.robot_reset_orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        tom_x, tom_y, tom_z = 0.0
+        self.robot_reset_position = Point(x=tom_x, y=tom_y, z=tom_z)
+        tom_degree = 1.0
+        self.robot_reset_orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=tom_degree)
+        self.tom_position = Position(tom_x, tom_y, 1)
 
         # reset position and orientation of the small robot
         self.robot_model_name = "jerry"
-        self.robot_reset_position = Point(x=1.0, y=1.0, z=1.0)
-        self.robot_reset_orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
+        jerry_x, jerry_y, jerry_z = 1.0
+        self.robot_reset_position = Point(x=jerry_x, y=jerry_y, z=jerry_z)
+        jerry_degree = 1.0
+        self.robot_reset_orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=jerry_degree)
+        self.jerry_positon = Position(jerry_x, jerry_y, 1)
 
         # flag to keep track of the state of when we're resetting the world and when we're not
         # to avoid sending too many duplicate messages
@@ -42,6 +49,7 @@ class ResetWorld(object):
         
         # ROS subscribers
         rospy.Subscriber("/gazebo/model_states", ModelStates, self.model_states_received)
+        rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_grid)
 
         # ROS publishers
         self.model_states_pub = rospy.Publisher("/gazebo/set_model_state", ModelState, queue_size=10)
