@@ -5,12 +5,12 @@ import rospy
 
 from gazebo_msgs.msg import ModelState, ModelStates
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
-from q_learning_project.msg import QLearningReward
+from tom_and_jerry_project.msg import QLearningReward
 from std_msgs.msg import Header
+from nav_msgs.msg import OccupancyGrid
 
 from random import shuffle
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
-
 
 class ResetWorld(object):
 
@@ -23,65 +23,15 @@ class ResetWorld(object):
         self.positive_reward_amount = 100
         self.negative_reward_amount = 0
 
-        self.robot_dbs = ["red", "green", "blue"]
-
-        # db model names
-        self.db_model_names = {
-            "red": "robot_dumbbell_red",
-            "green": "robot_dumbbell_green",
-            "blue": "robot_dumbbell_blue"
-        }
-
-        # reset positions and orientations of dbs
-        self.reset_xyz_positions_of_dbs = [
-            Point(x=1.0635, y=-0.5, z=0.1905),
-            Point(x=1.0635, y=0.0, z=0.1905),
-            Point(x=1.0635, y=0.5, z=0.1905)
-        ]
-        reset_quat_orientation_of_dbs_list = quaternion_from_euler(1.5708, 0.0, 0.0)
-        self.reset_quat_orientation_of_dbs = Quaternion()
-        self.reset_quat_orientation_of_dbs.x = reset_quat_orientation_of_dbs_list[0]
-        self.reset_quat_orientation_of_dbs.y = reset_quat_orientation_of_dbs_list[1]
-        self.reset_quat_orientation_of_dbs.z = reset_quat_orientation_of_dbs_list[2]
-        self.reset_quat_orientation_of_dbs.w = reset_quat_orientation_of_dbs_list[3]
-
-        # numbered block model names
-        self.numbered_block_model_names = {
-            1: "number1",
-            2: "number2",
-            3: "number3"
-        }
-
-        # reset position and orientations of the numbered blocks
-        self.reset_numbered_blocks_positions = [
-            Point(x=-2.4, y=-2.0, z=0.4),
-            Point(x=-2.4, y=0.0, z=0.4),
-            Point(x=-2.4, y=2.0, z=0.4)
-        ]
-        self.reset_quat_orientation_of_numbered_blocks = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
-
-        # reset position and orientation of the robot
-        self.robot_model_name = "robot"
+        # reset position and orientation of the big robot
+        self.robot_model_name = "tom"
         self.robot_reset_position = Point(x=0.0, y=0.0, z=0.0)
         self.robot_reset_orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
 
-
-        # goal locations
-        self.goal_matches_dbs_to_numbered_blocks = {
-            "red": 3,
-            "green": 1,
-            "blue": 2
-        }
-
-        # current location of the numbered blocks
-        self.current_numbered_blocks_locations = None
-
-        # current locations of the robot dbs relative to the blocks
-        self.current_robot_db_locations = {
-            "red": 0,
-            "green": 0,
-            "blue": 0
-        }
+        # reset position and orientation of the small robot
+        self.robot_model_name = "jerry"
+        self.robot_reset_position = Point(x=1.0, y=1.0, z=1.0)
+        self.robot_reset_orientation = Quaternion(x=0.0, y=0.0, z=0.0, w=1.0)
 
         # flag to keep track of the state of when we're resetting the world and when we're not
         # to avoid sending too many duplicate messages
@@ -98,18 +48,6 @@ class ResetWorld(object):
         self.reward_pub = rospy.Publisher("/q_learning/reward", QLearningReward, queue_size=10)
 
         self.run()
-
-
-    def is_in_front_of_any_block(self, pose):
-
-        block_id_in_front_of = 0
-
-        for block_id in range(1, 4):
-            if (self.is_in_front_of_block_id(pose, block_id)):
-                block_id_in_front_of = block_id
-
-        return block_id_in_front_of
-
 
 
     def is_in_front_of_block_id(self, pose, block_id):
