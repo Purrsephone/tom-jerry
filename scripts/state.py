@@ -6,7 +6,7 @@ import math
 import numpy as np
 from nav_msgs.msg import OccupancyGrid
 from itertools import zip_longest
-from q_learning_project.msg import RobotCoord, GameState
+from tom_and_jerry_project.msg import QLearningReward, RobotCoord, GameState
 
 
 # Given an index and info about map, compute its real coordinate
@@ -50,8 +50,8 @@ class Grid:
         # once everything is setup initialized will be set to true
         self.initialized = False
 
-        # initialize this particle filter node
-        #rospy.init_node('turtlebot3_particle_filter')
+        # initialize the node
+        rospy.init_node('state')
 
         # side length of squares for states, 1 for now, can change
         self.square_side_len = 1
@@ -81,7 +81,7 @@ class Grid:
         self.state_pub = rospy.Publisher("/q_learning/state", GameState, queue_size=10)
 
         # wait for things to be set up
-        rospy.sleep(1)
+        rospy.sleep(3)
 
         # set up is complete
         self.initialized = True
@@ -119,8 +119,8 @@ class Grid:
         # keep only the midpoint of the square
         for square in temp_squares:
             for cell in square:
-            if (cell != 0) and (cell % delim-1 == 0) and (cell % delim2-1 != 0):
-                self.squares.append(cell)
+                if (cell != 0) and (cell % delim-1 == 0) and (cell % delim2-1 != 0):
+                    self.squares.append(cell)
 
         # convert squares list to 2D numpy array
         self.squares = np.array(self.squares.reshape(-1, sq_y))
@@ -197,7 +197,7 @@ class Grid:
             if((state1.z % 2) != 0):
                 if((state2.z % 2) == 0):
                     return True
-            else
+            else:
                 return False
 
     # checks if it is possible for both agents to move from one state to the next
@@ -206,7 +206,7 @@ class Grid:
         mouse_possible = possible_transition_helper(state1.mousepos, state2.mousepos)
         if(cat_possible and mouse_possible):
             return True
-        else
+        else:
             return False
 
     # helper function (for single agent)
@@ -282,6 +282,18 @@ class Grid:
     def make_action_list(self):
         for x in range(4):
             self.actions.append(x)
+    def run(self):
+        if self.initialized: 
+            self.get_grid()
+            self.make_action_matrix()
+            self.make_action_list()
+            self.publish_states()
+            print(self.action_matrix)
+            print(self.states)
+            print(self.actions)
+        else: 
+            rospy.sleep(1)
+
             
     def publish_states(self):
         count = 0 
@@ -294,3 +306,6 @@ class Grid:
                 self.state_pub.publish(state_msg) 
                 count += 1
 
+if __name__ == "__main__": 
+    node = Grid()
+    node.run()
