@@ -4,9 +4,8 @@ import rospy
 
 from gazebo_msgs.msg import ModelState
 from geometry_msgs.msg import Point, Pose, Quaternion, Twist, Vector3
-from tom_and_jerry_project.msg import QLearningReward
+from tom_and_jerry_project.msg import QLearningReward, RobotCoord, GameState
 from std_msgs.msg import Header
-from q_learning_project.msg import RobotCoord, GameState
 
 from random import shuffle
 from tf.transformations import quaternion_from_euler, euler_from_quaternion
