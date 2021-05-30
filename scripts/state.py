@@ -6,7 +6,7 @@ import math
 import numpy as np
 from nav_msgs.msg import OccupancyGrid
 from itertools import zip_longest
-from q_learning_project.msg import RobotCoord
+from q_learning_project.msg import RobotCoord, GameState
 
 
 # Given an index and info about map, compute its real coordinate
@@ -78,7 +78,7 @@ class Grid:
         rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_grid)
         
         # publish states 
-        self.state_pub = rospy.Publisher("/q_learning/reward", GameState, queue_size=10)
+        self.state_pub = rospy.Publisher("/q_learning/state", GameState, queue_size=10)
 
         # wait for things to be set up
         rospy.sleep(1)
