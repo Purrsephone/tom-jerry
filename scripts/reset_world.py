@@ -22,7 +22,6 @@ class ResetWorld(object):
         self.positive_reward_amount = 100
         self.negative_reward_amount = -1
 
-
         # reset position and orientation of the big robot
         self.tom_model_name = "tom"
         tom_x, tom_y, tom_z = 0.0

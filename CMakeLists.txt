@@ -50,10 +50,11 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
 add_message_files(
     FILES
+    GameState.msg
+    RobotCoord.msg
     QLearningReward.msg
     QMatrix.msg
     QMatrixRow.msg
-    RobotMove.msg
 )
 
 ## Generate services in the 'srv' folder
