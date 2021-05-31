@@ -22,7 +22,7 @@ class ResetWorld(object):
 
         # reset position and orientation of the big robot
         self.tom_model_name = "tom"
-        tom_x = 0.0
+        tom_x = -6
         tom_y = 0.0
         tom_z = 0.0
         self.tom_reset_position = Point(x=tom_x, y=tom_y, z=tom_z)
@@ -33,7 +33,7 @@ class ResetWorld(object):
 
         # TODO: add small robot model reset position and orientation of the small robot
         self.jerry_model_name = "jerry"
-        jerry_x = 1.0
+        jerry_x = -5
         jerry_y = 1.0
         jerry_z = 1.0
         self.jerry_reset_position = Point(x=jerry_x, y=jerry_y, z=jerry_z)
