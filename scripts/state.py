@@ -7,6 +7,7 @@ import numpy as np
 from nav_msgs.msg import OccupancyGrid
 from itertools import zip_longest
 from tom_and_jerry_project.msg import QLearningReward, RobotCoord, GameState
+from fake_data import * 
 
 
 # Given an index and info about map, compute its real coordinate
@@ -81,7 +82,7 @@ class Grid:
         self.state_pub = rospy.Publisher("/q_learning/state", GameState, queue_size=10)
 
         # wait for things to be set up
-        rospy.sleep(3)
+        rospy.sleep(1)
 
         # set up is complete
         self.initialized = True
@@ -93,18 +94,28 @@ class Grid:
     # given an occupancy grid, get info from it used to cut space into squares
     def get_grid(self):
         # get resolution, height, and width
-        resolution = self.map.info.resolution
-        width = self.map.info.width
-        height = self.map.info.height
+        #HARD CODE FOR NOW 
+        resolution = 0.05
+        #resolution = self.map.info.resolution
+        
+        #HARD CODE FOR NOW 
+        width = 384 
+        height = 384 
+        #width = self.map.info.width
+        #height = self.map.info.height
+
         # get origin coordinates
-        x_origin = self.map.info.origin.position.x
-        y_origin = self.map.info.origin.position.y
+        #HARD CODE FOR NOW 
+        x_origin = -10
+        y_origin = -10 
+        #x_origin = self.map.info.origin.position.x
+        #y_origin = self.map.info.origin.position.y
         # determine square dimensions
-        sq_x = (height * resolution)/self.square_side_len
-        sq_y = (width * resolution)/self.square_side_len
+        sq_x = int((height * resolution)/self.square_side_len)
+        sq_y = int((width * resolution)/self.square_side_len)
         # delimeters for chopping space into squares
         delim = (self.square_side_len/2)/resolution
-        delim2 = self.square_side_len/resolution
+        delim2 = int(self.square_side_len/resolution)
 
         # get list of indexes (flatten 2D array into 1D array)
         flat_map = []
@@ -114,7 +125,8 @@ class Grid:
                 flat_map.append(indx)
 
         # regroup indexes into groups of size delim2
-        temp_squares = group_elements(flat_map, delim2)
+        # temp_squares = self.group_elements(delim2, flat_map)
+        temp_squares = [flat_map[n:n+delim2] for n in range(0, len(flat_map), delim2)]
 
         # keep only the midpoint of the square
         for square in temp_squares:
@@ -122,24 +134,23 @@ class Grid:
                 if (cell != 0) and (cell % delim-1 == 0) and (cell % delim2-1 != 0):
                     self.squares.append(cell)
 
-        # convert squares list to 2D numpy array
-        self.squares = np.array(self.squares.reshape(-1, sq_y))
-
         # convert indexes into real coordinates
         for el in self.squares:
-            coord = convert_to_real_coords(cell, height, x_origin, y_origin, resolution)
-            el = [el, coord]
+            coord = convert_to_real_coords(el, height, x_origin, y_origin, resolution)
+            indx = self.squares.index(el)
+            self.squares[indx] = [el, coord]
 
         valid_squares = []
         # remove any invalid squares from our list of squares
         for el in self.squares:
-            for sub in el:
-                indx = sub[0]
-                if(self.map.data[indx] == 0):
-                    sub.pop(0)
-                    # package coordinates plus orientation into Position class
-                    sqr = Position(sub[0][0], sub[0][1], -1)
-                    valid_squares.append(sqr)
+            indx = el[0]
+            #should be self.map.data[indx] but hard coding in alt for now 
+            #if(self.map.data[indx] == 0):
+            if(map_data[indx] == 0):
+                el.pop(0)
+                # package coordinates plus orientation into Position class
+                sqr = Position(el[0][0], el[0][1], -1)
+                valid_squares.append(sqr)
 
         # now we should have a states list with only valid square midpoints, yay!
         # permuate the possible states based on the squares and orientations
@@ -202,8 +213,8 @@ class Grid:
 
     # checks if it is possible for both agents to move from one state to the next
     def possible_transition(self, state1, state2):
-        cat_possible = possible_transition_helper(state1.catpos, state2.catpos)
-        mouse_possible = possible_transition_helper(state1.mousepos, state2.mousepos)
+        cat_possible = self.possible_transition_helper(state1.catpos, state2.catpos)
+        mouse_possible = self.possible_transition_helper(state1.mousepos, state2.mousepos)
         if(cat_possible and mouse_possible):
             return True
         else:
@@ -251,8 +262,8 @@ class Grid:
     #3 = do nothing
     # returns an array with [cat_action, mouse_action]
     def necessary_action(self, state1, state2):
-        cat_action = necessary_action_helper(state1.catpos, state2.catpos)
-        mouse_action = necessary_action_hlper(state1.mousepos, state2.mousepos)
+        cat_action = self.necessary_action_helper(state1.catpos, state2.catpos)
+        mouse_action = self.necessary_action_helper(state1.mousepos, state2.mousepos)
         return [cat_action, mouse_action]
 
     # make 2D array action matrix by pairing off state1 vs. state2 combos
@@ -260,14 +271,14 @@ class Grid:
     # the array of actions [cat, mouse] OR -1 if not possible transition
     def make_action_matrix(self):
         num_states = len(self.states)
-        self.action_matrix = np.array((num_states, num_states))
+        self.action_matrix = np.empty((num_states, num_states))
         outer_loop_counter = 0
         for state in self.states:
             inner_loop_counter = 0
             for state2 in self.states:
-                valid = possible_transition(state, state2)
+                valid = self.possible_transition(state, state2)
                 if(valid):
-                    action_needed = necessary_action(state, state2)
+                    action_needed = self.necessary_action(state, state2)
                     self.action_matrix[outer_loop_counter][inner_loop_counter] = action_needed
                 else:
                      self.action_matrix[outer_loop_counter][inner_loop_counter] = -1
@@ -282,10 +293,12 @@ class Grid:
     def make_action_list(self):
         for x in range(4):
             self.actions.append(x)
+    #THIS IS FOR YOU CARLOS 
     def run(self):
         if self.initialized: 
             self.get_grid()
-            self.make_action_matrix()
+            print(len(self.states))
+            #self.make_action_matrix()
             self.make_action_list()
             self.publish_states()
             print(self.action_matrix)
@@ -299,10 +312,18 @@ class Grid:
         count = 0 
         for state in self.states:
                # publish all states
-                state_msg = RobotCoord()
+                cat_msg = RobotCoord()
+                cat_msg.x_coord = state.catpos.x 
+                cat_msg.y_coord = state.catpos.y 
+                cat_msg.z_coord = state.catpos.z 
+                mouse_msg = RobotCoord()
+                mouse_msg.x_coord = state.mousepos.x 
+                mouse_msg.y_coord = state.mousepos.y 
+                mouse_msg.z_coord = state.mousepos.z 
+                state_msg = GameState()
                 state_msg.move_num = count 
-                state_msg.tom_coord = state.catpos
-                state_msg.jerry_coord = state.mousepos 
+                state_msg.tom_coord = cat_msg  
+                state_msg.jerry_coord = mouse_msg
                 self.state_pub.publish(state_msg) 
                 count += 1
 
