@@ -6,7 +6,7 @@
 
   <!-- startup simulated world -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch">
-    <arg name="world_name" value="$(find tom_and_jerry_project)/worlds/turtlebot3_empty.world"/>
+    <arg name="world_name" value="$(find tom_and_jerry_project)/worlds/turtlebot3_in_enclosed_room.world"/>
     <arg name="paused" value="$(arg paused)"/>
     <arg name="gui" value="$(arg gui)"/>
     <arg name="use_sim_time" value="$(arg use_sim_time)"/>
