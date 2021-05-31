@@ -1,8 +1,8 @@
 <launch>
   <!-- No namespace here as we will share this description. 
        Access with slash at the beginning -->
-  <param name="robot_description"
-    command="$(find xacro)/xacro.py $(find turtlebot_description)/robots/kobuki_hexagons_asus_xtion_pro.urdf.xacro" />
+
+  <param name="robot_description" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_$(arg model).urdf.xacro" />
 
   <!-- BEGIN ROBOT 1-->
   <group ns="tom">
