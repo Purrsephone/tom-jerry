@@ -1,3 +1,3 @@
-int16 x_coord
-int16 y_coord
-int16 z_coord
+float32 x_coord
+float32 y_coord
+float32 z_coord
