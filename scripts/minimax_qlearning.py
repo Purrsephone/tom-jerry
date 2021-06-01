@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 import os
-import csv, time, copy
+import csv, time
 from . import qmatrix
 
 
@@ -11,17 +11,16 @@ class QLearning(object):
 
     def __init__(self):
 
-        # TODO
-        # path of directory on where state/action matrices are located (or make them every time)
-        self.path_prefix = os.path.dirname(__file__) + "/action_states/"
+        # path of directory on where q_matrices are saved
+        self.path_prefix = os.path.dirname(__file__) + "/q_matrices/"
         self.q_matrix = None
 
-
-        # set learning rate, discount factor, explore factor
+        # set training paramters
         self.learning_rate = 1
         self.learning_rate_decay_factor = 0.99999
         self.discount_factor = 0.5
         self.explore_prob = 0.2
+        self.max_iteration = 10000  # change this later
 
         # TODO
         self.action_pub = None #rospy.Publisher(action_topic, action_type, queue_size=10)
@@ -60,6 +59,7 @@ class QLearning(object):
             exit(-1)
         
         train = True
+        iteration = 0
         while train:
             #TODO set initial state
             current_state = None
@@ -73,12 +73,14 @@ class QLearning(object):
                 q_value_adjustment = self.learning_rate*(self.reward(current_state, min_action, max_action) + next_state_value)
                 new_q_value = old_q_value + q_value_adjustment
                 self.q_matrix.set_q_matrix(current_state, max_action, min_action, new_q_value)
-                # TODO update policy
-                # TODO update current states value
+                self.q_matrix.update_maximizer_policy(current_state)
+                self.q_matrix.update_value(current_state)
                 current_state = next_state
                 self.learning_rate = self.learning_rate*self.learning_rate_decay_factor
-            # TODO decide on train=false condition (when learning rate totally decays maybe?)
-        # TODO save q_matrix
+                iteration +=1
+            if self.learning_rate < 0.05 or iteration == self.max_iteration:
+                train=False
+        self.save_q_matrix()
 
 
     def publish_according_to_q_matrix(self):
@@ -87,13 +89,26 @@ class QLearning(object):
     
 
     def save_q_matrix(self):
-        #TODO
-        pass
-
+        with open('q_matrix.csv', 'w') as csvfile:
+            q_matrix_writer = csv.writer(csvfile)
+            for state in self.q_matrix.states:
+                state_row = []
+                for action_pair in self.q_matrix.action_pairs:
+                    state_row.append(self.q_matrix.get_q_matrix_from_pair(state, action_pair))
+                q_matrix_writer.writerow(state_row)
+                
 
     def load_q_matrix(self):
-        #TODO
-        pass
+        with open('q_matrix.csv', 'r') as csvfile:
+            q_matrix_reader = csv.reader(csvfile)
+            row_num = 0
+            for row in q_matrix_reader:
+                action_pair_num = 0
+                for value in row:
+                    #Check this later
+                    self.q_matrix.set_q_matrix_from_pair(row_num, action_pair_num, value)
+                    action_pair_num +=1
+                row_num +=1
 
 
 if __name__ == "__main__":

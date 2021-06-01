@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+from scipy.optimize import linprog
 
 class QMatrix(object):
     """
@@ -42,6 +43,15 @@ class QMatrix(object):
         return
 
     
+    def get_q_matrix_from_pair(self, state, action_pair):
+        return self.q_matrix[state][action_pair]
+
+
+    def set_q_matrix_from_pair(self, state, action_pair, value):
+        self.q_matrix[state][action_pair] = value
+        return
+
+    
     def get_state_value(self, state):
         return self.state_value[state]
 
@@ -80,6 +90,59 @@ class QMatrix(object):
     def next_state(self, state, max_action, min_action):
         #TODO
         pass
+
+    
+    # Updates the maximizer policy based on the latest Q Values using linear programming 
+    def update_maximizer_policy(self, state):
+        best_policies = []
+        for min_action in self.q_matrix.minimizer_actions:
+            objective_coefficients = []
+            a_ub = []
+            b_ub = []
+            a_eq = [[]]
+            b_eq = [1]
+            for max_action1 in self.q_matrix.maximizer_actions:
+                # linprog finds the min, and we want max so we multiply by -1
+                objective_coefficients.append(-1*self.get_q_matrix(state, max_action1, min_action))
+                # ensure weights sum to 1
+                a_eq[0].append(1)
+            # conditions to ensure that solution is the minimum over other opponent actions
+            for alt_min_action in self.q_matrix.minimizer_actions:
+                if min_action != alt_min_action:
+                    upper_bound_row = []
+                    for max_action2 in self.q_matrix.maximizer_actions:
+                        upper_bound_row.append(self.get_q_matrix(state, max_action2, min_action) - self.get_q_matrix(state, max_action2, alt_min_action))
+                    a_ub.append(upper_bound_row)
+                    b_ub.append(0)
+
+            optimal_sol = linprog(objective_coefficients, a_ub, b_ub, a_eq, b_eq)
+            best_policies.append((optimal_sol.x, -1*optimal_sol.fun))
+
+        # pick out best solution
+        best_sol_val = best_policies[0][1]
+        best_sol_index = 0 
+        for index, sol_pair in enumerate(best_policies):
+            if sol_pair[1] > best_sol_val:
+                best_sol_index = index
+                best_sol_val = sol_pair[1]
+        
+        #construct new policy
+        new_policy = {}
+        for i, action in enumerate(self.maximizer_actions):
+            new_policy[action] = best_policies[best_sol_index][0][i]
+        self.set_max_policy(state, new_policy)
+        return
+
+
+    def update_value(self, state):
+        possible_values = []
+        for min_action in self.maximizer_actions:
+            sum = 0
+            for max_action in self.maximizer_actions:
+                sum += self.get_max_policy(state)[max_action] * self.get_q_matrix(state, max_action, min_action)
+            possible_values.append(sum)
+        self.set_state_value(state, min(possible_values))
+
 
 
 if __name__ == "__main__":
