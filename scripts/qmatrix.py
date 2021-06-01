@@ -7,7 +7,6 @@ class QMatrix(object):
     """
     def __init__(self, s=None, max_a=None, min_a=None, sam=None):
 
-        #TODO load in states, actions, action-state matrix
         self.states = s
         self.maximizer_actions = max_a
         self.minimizer_actions = min_a
@@ -24,7 +23,7 @@ class QMatrix(object):
             self.minimizer_policy[state] = {}
             self.state_value[state] = 1
             for max_action in self.maximizer_actions:
-                for min_action in self.minimizer_actions:
+                for _ in self.minimizer_actions:
                     q_matrix_row.append(1)
                 self.maximizer_policy[state][max_action] = 1/len(self.maximizer_actions)
             for action in self.minimizer_actions:
@@ -133,6 +132,23 @@ class QMatrix(object):
             possible_values.append(sum)
         self.set_state_value(state, min(possible_values))
 
+    
+    # returns true if the given maximizer action is valid from the given state
+    def valid_max_action(self, state, max_action) -> bool:
+        for i in range(len(self.minimizer_actions)):
+            action_index = len(self.minimizer_actions) * max_action + i 
+            if self.state_action_matrix[state][action_index] >= 0:
+                return True
+        return False
+
+    
+    # returns true if the given minimizer action is valid from the given state
+    def valid_min_action(self, state, min_action) -> bool:
+        for i in range (len(self.maximizer_actions)):
+            action_index = min_action + len(self.minimizer_actions)*i
+            if self.state_action_matrix[state][action_index] >= 0:
+                return True
+        return False
 
 
 if __name__ == "__main__":
