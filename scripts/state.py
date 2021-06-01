@@ -55,7 +55,7 @@ class Grid:
         rospy.init_node('state')
 
         # side length of squares for states, 1 for now, can change
-        self.square_side_len = 1
+        self.square_side_len = 60
 
         # set the topic names and frame names
         self.map_topic = "map"
@@ -110,9 +110,7 @@ class Grid:
         y_origin = -10 
         #x_origin = self.map.info.origin.position.x
         #y_origin = self.map.info.origin.position.y
-        # determine square dimensions
-        sq_x = int((height * resolution)/self.square_side_len)
-        sq_y = int((width * resolution)/self.square_side_len)
+     
         # delimeters for chopping space into squares
         delim = (self.square_side_len/2)/resolution
         delim2 = int(self.square_side_len/resolution)
@@ -155,12 +153,15 @@ class Grid:
         # now we should have a states list with only valid square midpoints, yay!
         # permuate the possible states based on the squares and orientations
         state_list = []
+        print("BEFORE PERMUTING DIRECTIONS")
+        print(len(valid_squares))
         for square in valid_squares:
             temp_sqr = square
             for x in range(4):
                 temp_sqr.z = x
                 state_list.append(temp_sqr)
-
+        print("BEFORE PAIRING UP CAT MOUSE")
+        print(len(state_list))
         # make the state include all possible combos of tom and jerry positions
         num_states = len(state_list)
         outer_loop_counter = 0
@@ -173,7 +174,8 @@ class Grid:
                 self.states.append(new_state)
                 inner_loop_counter += 1
             outer_loop_counter += 1
-
+        print("AFTER PAIRING")
+        print(len(self.states))
     # helper function, checks if it is possible for a single agent to move
     # from one state to the next
     def possible_transition_helper(self, state1, state2):
@@ -265,13 +267,61 @@ class Grid:
         cat_action = self.necessary_action_helper(state1.catpos, state2.catpos)
         mouse_action = self.necessary_action_helper(state1.mousepos, state2.mousepos)
         return [cat_action, mouse_action]
+    
+    def resulting_state(self, state1, action1, action2):
+        cat_pos_res = state1.catpos 
+        if action1 == 0: 
+            cat_pos_res.y = state1.catpos.y + self.square_side_len
+        if action1 == 1:
+            if state1.catpos.z == 3:
+                cat_pos_res.z = 0
+            else: 
+                cat_pos_res.z += 1 
+        if action1 == 2: 
+            if state1.catpos.z == 0:
+                cat_pos_res.z = 3
+            else: 
+                cat_pos_res.z -= 1 
+        mouse_pos_res = state1.mousepos  
+        if action2 == 0: 
+            mouse_pos_res.y = state1.mousepos.y + self.square_side_len
+        if action2 == 1:
+            if state1.mousepos.z == 3:
+                mouse_pos_res.z = 0
+            else: 
+                mouse_pos_res.z += 1 
+        if action2 == 2: 
+            if state1.mousepos.z == 0:
+                mouse_pos_res.z = 3
+            else: 
+                mouse_pos_res.z -= 1 
+        ret_state = State(cat_pos_res, mouse_pos_res)
+        if ret_state in self.states:
+            return ret_state
+        else:
+            return -1 
+    
+    def make_action_matrix_other(self):
+        num_states = len(self.states)
+        self.action_matrix = np.empty((num_states, 16), dtype=object)
+        outer_loop_counter = 0
+        for state in self.states: 
+            inner_loop_counter = 0
+            for x in range(4):
+                for y in range(4):
+                    res_state = self.resulting_state(state, x, y)
+                    self.action_matrix[outer_loop_counter][inner_loop_counter] = res_state 
+                    inner_loop_counter += 1 
+            outer_loop_counter += 1
+            #print(outer_loop_counter)
+
 
     # make 2D array action matrix by pairing off state1 vs. state2 combos
     # value at action_matrix[state1][state2] should be either
     # the array of actions [cat, mouse] OR -1 if not possible transition
     def make_action_matrix(self):
         num_states = len(self.states)
-        self.action_matrix = np.empty((num_states, num_states))
+        self.action_matrix = np.empty((num_states, num_states), dtype=object)
         outer_loop_counter = 0
         for state in self.states:
             inner_loop_counter = 0
@@ -298,11 +348,12 @@ class Grid:
         if self.initialized: 
             self.get_grid()
             print(len(self.states))
-            #self.make_action_matrix()
+            self.make_action_matrix_other()
             self.make_action_list()
-            self.publish_states()
+            print(len(self.action_matrix))
+            #self.publish_states()
             print(self.action_matrix)
-            print(self.states)
+            #print(self.states)
             print(self.actions)
         else: 
             rospy.sleep(1)
@@ -324,7 +375,8 @@ class Grid:
                 state_msg.move_num = count 
                 state_msg.tom_coord = cat_msg  
                 state_msg.jerry_coord = mouse_msg
-                self.state_pub.publish(state_msg) 
+                #TODO: fix the publishing 
+                #self.state_pub.publish(state_msg) 
                 count += 1
 
 if __name__ == "__main__": 
