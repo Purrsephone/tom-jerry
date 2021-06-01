@@ -5,50 +5,40 @@ class QMatrix(object):
     """
     A class representing a Qmatrix for a 2-agent adversarial game 
     """
-    def __init__(self):
+    def __init__(self, s=None, max_a=None, min_a=None, sam=None):
 
         #TODO load in states, actions, action-state matrix
-        self.states = None
-        self.action_pairs = None
-        self.maximizer_actions = None
-        self.minimizer_actions = None
-        self.action_state_matrix = None
+        self.states = s
+        self.maximizer_actions = max_a
+        self.minimizer_actions = min_a
+        self.state_action_matrix = sam
 
-        self.q_matrix = {}
+        self.q_matrix = []
         self.state_value = {}
         self.maximizer_policy = {}
         self.minimizer_policy = {}
 
         for state in self.states:
-            self.q_matrix[state] = {}
+            q_matrix_row = []
             self.maximizer_policy[state] = {}
             self.minimizer_policy[state] = {}
-            for action_pair in self.action_pairs:
-                # action pair should be a tuple of the maximizer action and minimzer action
-                self.q_matrix[state][action_pair] = 1
             self.state_value[state] = 1
-            for action in self.maximizer_actions:
-                self.maximizer_policy[state][action] = 1/len(self.maximizer_actions)
+            for max_action in self.maximizer_actions:
+                for min_action in self.minimizer_actions:
+                    q_matrix_row.append(1)
+                self.maximizer_policy[state][max_action] = 1/len(self.maximizer_actions)
             for action in self.minimizer_actions:
                 self.minimizer_policy[state][action] = 1/len(self.minimizer_actions)
+            self.q_matrix.append(q_matrix_row)
         return
 
 
     def get_q_matrix(self, state, max_action, min_action):
-        return self.q_matrix[state][(max_action, min_action)]
+        return self.q_matrix[state][len(self.minimizer_actions) * max_action + min_action]
 
 
     def set_q_matrix(self, state, max_action, min_action, value):
-        self.q_matrix[state][(max_action, min_action)] = value
-        return
-
-    
-    def get_q_matrix_from_pair(self, state, action_pair):
-        return self.q_matrix[state][action_pair]
-
-
-    def set_q_matrix_from_pair(self, state, action_pair, value):
-        self.q_matrix[state][action_pair] = value
+        self.q_matrix[state][len(self.minimizer_actions) * max_action + min_action] = value
         return
 
     
@@ -80,37 +70,37 @@ class QMatrix(object):
 
 
     def get_max_policy_probabilities(self, state):
-        return list(self.maximizer_policy[state].values)
+        return list(self.maximizer_policy[state].values())
 
 
     def get_min_policy_probabilities(self, state):
-        return list(self.minimizer_policy[state].values)
+        return list(self.minimizer_policy[state].values())
 
 
     def next_state(self, state, max_action, min_action):
-        #TODO
-        pass
+        action_index = len(self.minimizer_actions) * max_action + min_action
+        return self.state_action_matrix[state][action_index]
 
     
     # Updates the maximizer policy based on the latest Q Values using linear programming 
     def update_maximizer_policy(self, state):
         best_policies = []
-        for min_action in self.q_matrix.minimizer_actions:
+        for min_action in self.minimizer_actions:
             objective_coefficients = []
             a_ub = []
             b_ub = []
             a_eq = [[]]
             b_eq = [1]
-            for max_action1 in self.q_matrix.maximizer_actions:
+            for max_action1 in self.maximizer_actions:
                 # linprog finds the min, and we want max so we multiply by -1
                 objective_coefficients.append(-1*self.get_q_matrix(state, max_action1, min_action))
                 # ensure weights sum to 1
                 a_eq[0].append(1)
             # conditions to ensure that solution is the minimum over other opponent actions
-            for alt_min_action in self.q_matrix.minimizer_actions:
+            for alt_min_action in self.minimizer_actions:
                 if min_action != alt_min_action:
                     upper_bound_row = []
-                    for max_action2 in self.q_matrix.maximizer_actions:
+                    for max_action2 in self.maximizer_actions:
                         upper_bound_row.append(self.get_q_matrix(state, max_action2, min_action) - self.get_q_matrix(state, max_action2, alt_min_action))
                     a_ub.append(upper_bound_row)
                     b_ub.append(0)
