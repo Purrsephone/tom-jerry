@@ -7,10 +7,18 @@ class QMatrix(object):
     """
     def __init__(self, s=None, max_a=None, min_a=None, sam=None):
 
-        #TODO load in states, actions, action-state matrix
+        # a list of the possible states
         self.states = s
+        # a list of the maximizer actions
         self.maximizer_actions = max_a
+        # a list of the minimizer actions
         self.minimizer_actions = min_a
+        # a 2d array of state indices vs action pairs where the 
+        # entries are the states that follow from that pair of actions
+        # for ex: if maximizer takes action x and minimzer takes action y
+        # sam[state][len(minimizer_actions) * x + y] give the resulting state
+        # Note that this is distinct from the action-state matrix
+        # in the original q_learning project
         self.state_action_matrix = sam
 
         self.q_matrix = []
@@ -18,17 +26,29 @@ class QMatrix(object):
         self.maximizer_policy = {}
         self.minimizer_policy = {}
 
-        for state in self.states:
+        for idx, _ in enumerate(self.states):
             q_matrix_row = []
-            self.maximizer_policy[state] = {}
-            self.minimizer_policy[state] = {}
-            self.state_value[state] = 1
+            self.maximizer_policy[idx] = {}
+            self.minimizer_policy[idx] = {}
+            self.state_value[idx] = 1
             for max_action in self.maximizer_actions:
-                for min_action in self.minimizer_actions:
+                for _ in self.minimizer_actions:
                     q_matrix_row.append(1)
-                self.maximizer_policy[state][max_action] = 1/len(self.maximizer_actions)
-            for action in self.minimizer_actions:
-                self.minimizer_policy[state][action] = 1/len(self.minimizer_actions)
+                valid_max_actions = []
+                if self.valid_max_action(idx, max_action):
+                    valid_max_actions.append(max_action)
+                self.maximizer_policy[idx][max_action] = 0
+            for vmax_action in valid_max_actions:
+                self.maximizer_policy[idx][vmax_action] = 1/len(valid_max_actions)
+
+            for min_action in self.minimizer_actions:
+                valid_min_actions = []
+                if self.valid_min_action(idx, min_action):
+                    valid_min_actions.append(min_action)
+                self.minimizer_policy[idx][min_action] = 0
+            for vmin_action in valid_min_actions:
+                self.minimizer_policy[idx][vmin_action] = 1/len(valid_min_actions)
+            
             self.q_matrix.append(q_matrix_row)
         return
 
@@ -86,27 +106,31 @@ class QMatrix(object):
     def update_maximizer_policy(self, state):
         best_policies = []
         for min_action in self.minimizer_actions:
-            objective_coefficients = []
-            a_ub = []
-            b_ub = []
-            a_eq = [[]]
-            b_eq = [1]
-            for max_action1 in self.maximizer_actions:
-                # linprog finds the min, and we want max so we multiply by -1
-                objective_coefficients.append(-1*self.get_q_matrix(state, max_action1, min_action))
-                # ensure weights sum to 1
-                a_eq[0].append(1)
-            # conditions to ensure that solution is the minimum over other opponent actions
-            for alt_min_action in self.minimizer_actions:
-                if min_action != alt_min_action:
-                    upper_bound_row = []
-                    for max_action2 in self.maximizer_actions:
-                        upper_bound_row.append(self.get_q_matrix(state, max_action2, min_action) - self.get_q_matrix(state, max_action2, alt_min_action))
-                    a_ub.append(upper_bound_row)
-                    b_ub.append(0)
+            if self.valid_min_action(state, min_action):
+                objective_coefficients = []
+                a_ub = []
+                b_ub = []
+                a_eq = [[]]
+                b_eq = [1]
+                for max_action1 in self.maximizer_actions:
+                    if self.valid_max_action(state, max_action1):
+                        # linprog finds the min, and we want max so we multiply by -1
+                        objective_coefficients.append(-1*self.get_q_matrix(state, max_action1, min_action))
+                        # ensure weights sum to 1
+                        a_eq[0].append(1)
+                # conditions to ensure that solution is the minimum over other opponent actions
+                for alt_min_action in self.minimizer_actions:
+                    if self.valid_min_action(state, alt_min_action) :# and min_action != alt_min_action:
+                        upper_bound_row = []
+                        for max_action2 in self.maximizer_actions:
+                            if self.valid_max_action(state, max_action2):
+                                q_difference = self.get_q_matrix(state, max_action2, min_action) - self.get_q_matrix(state, max_action2, alt_min_action)
+                                upper_bound_row.append(q_difference)
+                        a_ub.append(upper_bound_row)
+                        b_ub.append(0)
 
-            optimal_sol = linprog(objective_coefficients, a_ub, b_ub, a_eq, b_eq)
-            best_policies.append((optimal_sol.x, -1*optimal_sol.fun))
+                optimal_sol = linprog(objective_coefficients, a_ub, b_ub, a_eq, b_eq)
+                best_policies.append((optimal_sol.x, -1*optimal_sol.fun))
 
         # pick out best solution
         best_sol_val = best_policies[0][1]
@@ -118,8 +142,13 @@ class QMatrix(object):
         
         #construct new policy
         new_policy = {}
-        for i, action in enumerate(self.maximizer_actions):
-            new_policy[action] = best_policies[best_sol_index][0][i]
+        valid_action_counter = 0 
+        for action in self.maximizer_actions:
+            if self.valid_max_action(state, action):
+                new_policy[action] = best_policies[best_sol_index][0][valid_action_counter]
+                valid_action_counter += 1
+            else:
+                new_policy[action] = 0
         self.set_max_policy(state, new_policy)
         return
 
@@ -127,12 +156,30 @@ class QMatrix(object):
     def update_value(self, state):
         possible_values = []
         for min_action in self.maximizer_actions:
-            sum = 0
-            for max_action in self.maximizer_actions:
-                sum += self.get_max_policy(state)[max_action] * self.get_q_matrix(state, max_action, min_action)
-            possible_values.append(sum)
+            if self.valid_min_action(state, min_action):
+                sum = 0
+                for max_action in self.maximizer_actions:
+                    sum += self.get_max_policy(state)[max_action] * self.get_q_matrix(state, max_action, min_action)
+                possible_values.append(sum)
         self.set_state_value(state, min(possible_values))
 
+    
+    # returns true if the given maximizer action is valid from the given state
+    def valid_max_action(self, state, max_action) -> bool:
+        for i in range(len(self.minimizer_actions)):
+            action_index = len(self.minimizer_actions) * max_action + i 
+            if self.state_action_matrix[state][action_index] >= 0:
+                return True
+        return False
+
+    
+    # returns true if the given minimizer action is valid from the given state
+    def valid_min_action(self, state, min_action) -> bool:
+        for i in range (len(self.maximizer_actions)):
+            action_index = min_action + len(self.minimizer_actions)*i
+            if self.state_action_matrix[state][action_index] >= 0:
+                return True
+        return False
 
 
 if __name__ == "__main__":
