@@ -5,6 +5,7 @@ import numpy as np
 import os
 import csv, time
 import qmatrix, rps_test, tictactoe_test
+import state
 
 
 class QLearning(object):
@@ -15,14 +16,17 @@ class QLearning(object):
         self.path_prefix = os.path.dirname(__file__) + "/q_matrices/"
         self.q_matrix = None
 
-        self.TTTGame = tictactoe_test.TicTacToe()
-        self.RPSGame = rps_test.RPSGame()
+        # Choose a game to train
+        # self.TTTGame = tictactoe_test.TicTacToe()
+        # self.RPSGame = rps_test.RPSGame()
+        self.TJGame = state.Grid()
+        self.csv_name = 'q_matrixTJ.csv'
 
         # set training paramters
         self.learning_rate = 1
         self.learning_rate_decay_factor = 0.99999
         self.discount_factor = 0.5
-        self.explore_prob = 1
+        self.explore_prob = 1 # need to fix for values < 1
         self.max_iteration = 200000 # change this later
         # TODO change later if need be
         self.initial_state = 0 
@@ -65,12 +69,17 @@ class QLearning(object):
     
     # given a state, returns its reward, dependent on game
     def reward(self, state, max_action, min_action) -> int:
+        pass
+        # TTT reward
+        """
         if self.TTTGame.game_over(self.q_matrix.next_state(state, max_action, min_action)) == 1:
             return 100
         elif self.TTTGame.game_over(self.q_matrix.next_state(state, max_action, min_action)) == 2:
             return -100
         else:
             return 0
+        """
+        # RPS reward
         """
         if self.q_matrix.next_state(state, max_action, min_action) == 1:
             return 100
@@ -83,7 +92,12 @@ class QLearning(object):
     
     # Checks if game is over, dependent on game
     def check_game_over(self, state, max_action, min_action) -> bool:
+        pass
+        # TTT game over
+        """
         return self.TTTGame.game_over(self.q_matrix.next_state(state, max_action, min_action)) > 0
+        """
+        # RPS game over
         """
         if self.q_matrix.next_state(state, max_action, min_action) != 0:
             return True
@@ -111,10 +125,9 @@ class QLearning(object):
             current_state = self.initial_state
             game_over:bool = False
             while not game_over:
-                max_action = self.choose_maximizer_action(current_state) # 3 + (iteration % 5)//2 #
-                min_action = self.choose_minimizer_action(current_state) # 0 + (iteration % 5)//2 #
+                max_action = self.choose_maximizer_action(current_state)
+                min_action = self.choose_minimizer_action(current_state)
                 next_state = self.q_matrix.next_state(current_state, max_action, min_action)
-                #print(current_state, self.TTTGame.state_num_to_array(current_state), max_action, min_action, self.TTTGame.state_num_to_array(next_state), next_state) 
                 old_q_value = (1 - self.learning_rate)*self.q_matrix.get_q_matrix(current_state, max_action, min_action)
                 next_state_value = self.discount_factor*self.q_matrix.get_state_value(next_state)
                 q_value_adjustment = self.learning_rate*(self.reward(current_state, max_action, min_action) + next_state_value)
@@ -131,7 +144,7 @@ class QLearning(object):
             elif (iteration % 100) == 0:
                 print("Iteration:", iteration, "Learning Rate:", self.learning_rate)
         print("Optimal Maximizer policy:", self.q_matrix.get_max_policy(0))
-        self.save_q_matrix()
+        self.save_q_matrix(self.csv_name)
 
 
     def publish_according_to_q_matrix(self):
@@ -139,8 +152,8 @@ class QLearning(object):
         pass
     
 
-    def save_q_matrix(self):
-        with open(self.path_prefix + 'q_matrixTTT.csv', 'w') as csvfile:
+    def save_q_matrix(self, csv_name):
+        with open(self.path_prefix + csv_name, 'w') as csvfile:
             q_matrix_writer = csv.writer(csvfile)
             for state in self.q_matrix.states:
                 state_row = []
@@ -150,9 +163,9 @@ class QLearning(object):
                 q_matrix_writer.writerow(state_row)
                 
 
-    def load_q_matrix(self):
+    def load_q_matrix(self, csv_name):
         self.q_matrix.q_matrix = []
-        with open(self.path_prefix + 'q_matrixTTT.csv', 'r') as csvfile:
+        with open(self.path_prefix + csv_name, 'r') as csvfile:
             q_matrix_reader = csv.reader(csvfile)
             for row in q_matrix_reader:
                 #check this later, not independent of qmatrix.py implementation
@@ -162,22 +175,21 @@ class QLearning(object):
 
 if __name__ == "__main__":
     ql = QLearning()
-    #ql.train_q_matrix(rps=False, ttt=True)
+    #ql.train_q_matrix(rps=False, ttt=False)
 
     # test loading rps qmatrix and computing policy from it
     """
     rps_info = rps_test.RPSGame()
     ql.q_matrix = qmatrix.QMatrix(rps_info.states, rps_info.maximizer_actions, rps_info.minimizer_actions, rps_info.state_action_matrix)
-    ql.load_q_matrix()
+    ql.load_q_matrix('q_matrixRPS.csv')
     ql.q_matrix.update_maximizer_policy(0)
     print(ql.q_matrix.get_max_policy(0))
     """
-
     # test loading tictactoe and computing policy from it
-    
+    """
     ttt_info = tictactoe_test.TicTacToe()
     ql.q_matrix = qmatrix.QMatrix(ttt_info.states, ttt_info.maximizer_actions, ttt_info.minimizer_actions, ttt_info.state_action_matrix)
-    ql.load_q_matrix()
+    ql.load_q_matrix('q_matrixTTT.CSV)
     ql.q_matrix.update_maximizer_policy(0)
     print("state 0 policy:", ql.q_matrix.get_max_policy(0))
     ql.q_matrix.update_maximizer_policy(13636)
@@ -186,4 +198,4 @@ if __name__ == "__main__":
     print("state 178 policy:", ql.q_matrix.get_max_policy(178), "Expected action 7 w/ high likelihood" )
     ql.q_matrix.update_maximizer_policy(13072)
     print("state 13072 policy:", ql.q_matrix.get_max_policy(13072), "Expected action 2 w/ high likelihood" )
-    
+    """
