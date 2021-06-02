@@ -4,12 +4,13 @@ import rospy
 import numpy as np
 import os
 import csv, time
-import qmatrix, rps_test, tictactoe_test
-import state
+import qmatrix, tom_jerry_game #, rps_test, tictactoe_test
 
 
 class QLearning(object):
-
+    """
+    A class representing the Qlearning algorithm for a 2-agent adversarial game 
+    """
     def __init__(self):
 
         # path of directory on where q_matrices are saved
@@ -19,7 +20,7 @@ class QLearning(object):
         # Choose a game to train
         # self.TTTGame = tictactoe_test.TicTacToe()
         # self.RPSGame = rps_test.RPSGame()
-        self.TJGame = state.Grid()
+        self.TJGame = tom_jerry_game.TJGame()
         self.csv_name = 'q_matrixTJ.csv'
 
         # set training paramters
@@ -155,11 +156,11 @@ class QLearning(object):
     def save_q_matrix(self, csv_name):
         with open(self.path_prefix + csv_name, 'w') as csvfile:
             q_matrix_writer = csv.writer(csvfile)
-            for state in self.q_matrix.states:
+            for idx, _ in enumerate(self.q_matrix.states):
                 state_row = []
                 for max_action in self.q_matrix.maximizer_actions:
                     for min_action in self.q_matrix.minimizer_actions:
-                        state_row.append(self.q_matrix.get_q_matrix(state, max_action, min_action))
+                        state_row.append(self.q_matrix.get_q_matrix(idx, max_action, min_action))
                 q_matrix_writer.writerow(state_row)
                 
 

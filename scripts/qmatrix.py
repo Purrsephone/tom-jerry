@@ -7,9 +7,18 @@ class QMatrix(object):
     """
     def __init__(self, s=None, max_a=None, min_a=None, sam=None):
 
+        # a list of the possible states
         self.states = s
+        # a list of the maximizer actions
         self.maximizer_actions = max_a
+        # a list of the minimizer actions
         self.minimizer_actions = min_a
+        # a 2d array of state indices vs action pairs where the 
+        # entries are the states that follow from that pair of actions
+        # for ex: if maximizer takes action x and minimzer takes action y
+        # sam[state][len(minimizer_actions) * x + y] give the resulting state
+        # Note that this is distinct from the action-state matrix
+        # in the original q_learning project
         self.state_action_matrix = sam
 
         self.q_matrix = []
@@ -17,28 +26,28 @@ class QMatrix(object):
         self.maximizer_policy = {}
         self.minimizer_policy = {}
 
-        for state in self.states:
+        for idx, _ in enumerate(self.states):
             q_matrix_row = []
-            self.maximizer_policy[state] = {}
-            self.minimizer_policy[state] = {}
-            self.state_value[state] = 1
+            self.maximizer_policy[idx] = {}
+            self.minimizer_policy[idx] = {}
+            self.state_value[idx] = 1
             for max_action in self.maximizer_actions:
                 for _ in self.minimizer_actions:
                     q_matrix_row.append(1)
                 valid_max_actions = []
-                if self.valid_max_action(state, max_action):
+                if self.valid_max_action(idx, max_action):
                     valid_max_actions.append(max_action)
-                self.maximizer_policy[state][max_action] = 0
+                self.maximizer_policy[idx][max_action] = 0
             for vmax_action in valid_max_actions:
-                self.maximizer_policy[state][vmax_action] = 1/len(valid_max_actions)
+                self.maximizer_policy[idx][vmax_action] = 1/len(valid_max_actions)
 
             for min_action in self.minimizer_actions:
                 valid_min_actions = []
-                if self.valid_min_action(state, min_action):
+                if self.valid_min_action(idx, min_action):
                     valid_min_actions.append(min_action)
-                self.minimizer_policy[state][min_action] = 0
+                self.minimizer_policy[idx][min_action] = 0
             for vmin_action in valid_min_actions:
-                self.minimizer_policy[state][vmin_action] = 1/len(valid_min_actions)
+                self.minimizer_policy[idx][vmin_action] = 1/len(valid_min_actions)
             
             self.q_matrix.append(q_matrix_row)
         return
