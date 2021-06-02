@@ -29,17 +29,29 @@ class Movement():
         rospy.spin()
         return 1 
 
-    def move_forward(self, speed):
+    def move_forward(self, speed, distance):
         vel_msg = Twist()
-        vel_msg.linear.x = speed 
+        curr_distance = 0 
+        time_start = rospy.Time.now().to_sec()
+        while curr_distance < distance:
+            vel_msg.linear.x = speed 
+            self.vel_pub.publish(vel_msg)
+            curr_time = rospy.Time.now().to_sec()
+            curr_distance = (curr_time - time_start) * speed 
+        vel_msg.linear.x = 0
         self.vel_pub.publish(vel_msg)
+        return 1
 
     def run(self):
-        test = self.turn_90(0.1, 0)
-        if test==1: 
-            move_forward(0.3)
+        #self.turn_90(0.1, 0)
+        self.move_forward(0.5)
+        print("meow")
+        rospy.loginfo("meow")
+        #if test==1: 
+            #move_forward(0.3)
 
 #runs functions upon execution 		
 if __name__ == '__main__':
-	rosnode = Movement()
-	rosnode.run()
+    rosnode = Movement()
+    rosnode.run()
+    rospy.spin()
