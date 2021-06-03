@@ -8,7 +8,7 @@ from nav_msgs.msg import OccupancyGrid
 from itertools import zip_longest
 from tom_and_jerry_project.msg import QLearningReward, RobotCoord, GameState
 from fake_data import * 
-
+import copy 
 
 # Given an index and info about map, compute its real coordinate
 # returns an array [x, y]
@@ -156,8 +156,8 @@ class Grid:
         print("BEFORE PERMUTING DIRECTIONS")
         print(len(valid_squares))
         for square in valid_squares:
-            temp_sqr = square
             for x in range(4):
+                temp_sqr = copy.deepcopy(square)
                 temp_sqr.z = x
                 state_list.append(temp_sqr)
         print("BEFORE PAIRING UP CAT MOUSE")
@@ -302,10 +302,11 @@ class Grid:
             return -1 
     
     def make_action_matrix_other(self):
+        new_states = copy.deepcopy(self.states)
         num_states = len(self.states)
         self.action_matrix = np.empty((num_states, 16), dtype=object)
         outer_loop_counter = 0
-        for state in self.states: 
+        for state in new_states: 
             inner_loop_counter = 0
             for x in range(4):
                 for y in range(4):
@@ -348,13 +349,26 @@ class Grid:
         if self.initialized: 
             self.get_grid()
             print(len(self.states))
+            for x in range(40):
+                print(self.states[x].catpos.x)
+                print(self.states[x].catpos.y)
+                print(self.states[x].catpos.z)
+            #print(self.states)
+
             self.make_action_matrix_other()
             self.make_action_list()
-            print(len(self.action_matrix))
+            for state in self.states:
+                print(state.catpos.x)
+                print(state.catpos.y)
+                print(state.catpos.z)
+            print("DONE HOMIE")
+            #print(len(self.action_matrix))
             #self.publish_states()
-            print(self.action_matrix)
+            #print(self.action_matrix)
             #print(self.states)
-            print(self.actions)
+            #print(self.actions)
+            #print(self.states)
+
         else: 
             rospy.sleep(1)
 
