@@ -20,7 +20,7 @@ class QLearning(object):
         # Choose a game to train
         # self.TTTGame = tictactoe_test.TicTacToe()
         # self.RPSGame = rps_test.RPSGame()
-        self.TJGame = tom_jerry_game.TJGame()
+        self.TJGame = tom_jerry_game.TJGame(compute_game_info=False, load_from_file=True, game_info_prefix="TJGame1")
         self.csv_name = 'q_matrixTJ.csv'
 
         # set training paramters
@@ -28,7 +28,7 @@ class QLearning(object):
         self.learning_rate_decay_factor = 0.99999
         self.discount_factor = 0.5
         self.explore_prob = 1 # need to fix for values < 1
-        self.max_iteration = 200000 # change this later
+        self.max_iteration = 10000 # change this later
         # TODO change later if need be
         self.initial_state = 0 
 
