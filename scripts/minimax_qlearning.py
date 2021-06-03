@@ -70,7 +70,7 @@ class QLearning(object):
     
     # given a state, returns its reward, dependent on game
     def reward(self, state, max_action, min_action) -> int:
-        pass
+        return self.TJGame.reward(state, max_action, min_action)
         # TTT reward
         """
         if self.TTTGame.game_over(self.q_matrix.next_state(state, max_action, min_action)) == 1:
@@ -93,7 +93,7 @@ class QLearning(object):
     
     # Checks if game is over, dependent on game
     def check_game_over(self, state, max_action, min_action) -> bool:
-        pass
+        return self.TJGame.game_over(state, max_action, min_action)
         # TTT game over
         """
         return self.TTTGame.game_over(self.q_matrix.next_state(state, max_action, min_action)) > 0
@@ -171,8 +171,6 @@ class QLearning(object):
             for row in q_matrix_reader:
                 #check this later, not independent of qmatrix.py implementation
                 self.q_matrix.q_matrix.append([float(i) for i in row])
-
-
 
 if __name__ == "__main__":
     ql = QLearning()

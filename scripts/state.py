@@ -408,14 +408,14 @@ class Grid:
     def run(self):
         if self.initialized: 
             self.get_grid()
+            """
             print(len(self.states))
             for x in range(40):
                 print(self.states[x].catpos.x)
                 print(self.states[x].catpos.y)
                 print(self.states[x].catpos.z)
-            #print(self.states)
-
-            #self.make_action_matrix_other()
+            """
+            self.make_action_matrix_other()
             self.make_action_list()
             print("DONE HOMIE")
             self.test_snack_time()
