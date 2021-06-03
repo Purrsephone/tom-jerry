@@ -320,20 +320,21 @@ class Grid:
     # cat can monch mouse if and only if 
     # 1 cat is in an adjacent square and 
     # 2 cat is not facing the opposite direction from mouse
-    def snack_time(self, curr_state, sq_len):
+    def snack_time(self, curr_state):
+        #HARD coding in res for now 
+        res = 0.05
+        sq_len = res * self.square_side_len
         adjacent_square = False 
-        print(curr_state.catpos.y)
-        print(curr_state.mousepos.y)
         if(curr_state.catpos.x == curr_state.mousepos.x):
-            if(abs(curr_state.catpos.y - curr_state.mousepos.y) == sq_len):
-                return True 
+            if(abs(curr_state.catpos.y - curr_state.mousepos.y) <= sq_len):
+                adjacent_square = True 
             else:
-                return False 
+                adjacent_square = False 
         if(curr_state.catpos.y == curr_state.mousepos.y):
-            if(abs(curr_state.catpos.x - curr_state.mousepos.x) == sq_len):
-                return True 
+            if(abs(curr_state.catpos.x - curr_state.mousepos.x) <= sq_len):
+                adjacent_square = True 
             else:
-                return False                
+                adjacent_square = False                
         if(adjacent_square == True):
             # cat is west of mouse
             if(curr_state.catpos.x < curr_state.mousepos.x):
@@ -341,19 +342,18 @@ class Grid:
                     return False 
             # cat is east of mouse
             if(curr_state.catpos.x > curr_state.mousepos.x):
-                if(curr.state.catpos.z == 1):
+                if(curr_state.catpos.z == 1):
                     return False 
               # cat is north of mouse
             if(curr_state.catpos.y > curr_state.mousepos.y):
-                if(curr.state.catpos.z == 0):
+                if(curr_state.catpos.z == 0):
                     return False 
               # cat is south of mouse
             if(curr_state.catpos.y > curr_state.mousepos.y):
-                if(curr.state.catpos.z == 2):
+                if(curr_state.catpos.z == 2):
                     return False 
             return True 
         else: 
-            print("CHEESE")
             return False 
 
     # runs a couple test cases for the snack time function 
@@ -362,21 +362,21 @@ class Grid:
         catpos1 = Position(5, 4, 0)
         mousepos1 = Position(10, 5, 2)
         state1 = State(catpos1, mousepos1)
-        test1 = self.snack_time(state1, 1)
+        test1 = self.snack_time(state1)
         # test 2, should return False bc facing wrong way 
         catpos2 = Position(3, 5, 1)
         mousepos2 = Position(2, 5, 3)
         state2 = State(catpos2, mousepos2)
-        test2 = self.snack_time(state2, 1)
+        test2 = self.snack_time(state2)
         # test 3, should return True 
         catpos3 = Position(3, 5, 3)
         mousepos3 = Position(2, 5, 3)
         state3 = State(catpos3, mousepos3)
-        test3 = self.snack_time(state3, 1)
+        test3 = self.snack_time(state3)
         print(test1)
         print(test2)
         print(test3)
-
+     
     # make 2D array action matrix by pairing off state1 vs. state2 combos
     # value at action_matrix[state1][state2] should be either
     # the array of actions [cat, mouse] OR -1 if not possible transition
