@@ -25,7 +25,4 @@
   <!-- run world restting node -->
   <node name="reset_world_q_learning" pkg="tom_and_jerry_project" type="reset_world.py" respawn="true" />
 
-  <!-- run q matrix scripts -->
-  <node name="state" pkg="tom_and_jerry_project" type="tom_jerry_game.py" />
-  
 </launch>
