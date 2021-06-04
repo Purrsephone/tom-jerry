@@ -47,6 +47,8 @@
   <!-- run q matrix scripts -->
   <node name="state" pkg="tom_and_jerry_project" type="state.py" respawn="false" output="screen"/>
   
+  <!-- run movement.py -->
+  <node name="movement" pkg="tom_and_jerry_project" type="movement.py" respawn="true" output="screen"/>
   <!-- run world restting node -->
   <node name="reset_world_q_learning" pkg="tom_and_jerry_project" type="reset_world.py" respawn="true" />
 
