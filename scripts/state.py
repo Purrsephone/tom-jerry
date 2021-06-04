@@ -106,6 +106,7 @@ class Grid:
         y_coors_array = math.ceil(height / self.square_side_len)
 
         coors_array = [[None]*y_coors_array] * x_coors_array
+        print(coors_array)
 
         def get_midpoint(x, y, edge):
             x_mid = x*self.square_side_len+.5*self.square_side_len
@@ -142,16 +143,19 @@ class Grid:
 
         # set real midpoint coordintes and valid state
         for x in range(x_coors_array):
+            print("----------------------")
             for y in range(y_coors_array):
                 print(f"{x},{y}")
                 edge = ''
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
                 elif y == y_coors_array-1: edge = 'y'
+                if coors_array[x][y] is not None: print(f"occupied by: {coors_array[x][y]}") 
                 coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
+                print(coors_array[x][y])
 
         self.coors_array = coors_array
-        print(coors_array)
+        print(coors_array[0][0])
         
 
         # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
