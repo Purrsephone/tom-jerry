@@ -24,9 +24,7 @@ def convert_to_real_coords(indx, height, orx, ory, res):
     y_coord = ory + (y_val * res)
 
     # Create a new coordinate
-    coords = [x_coord, y_coord]
-
-    return(coords)
+    return(x_coord, y_coord)
 
 # define a position class which is composed of an x, y coordinate
 # pair plus an orientation (0, 1, 2, or 3)
@@ -109,23 +107,23 @@ class Grid:
         print("RES  BOI")
         print(resolution)
         #HARD CODE FOR NOW 
-        width = 384 
-        height = 384 
-        #width = self.map.info.width
-        #height = self.map.info.height
+        # width = 384 
+        # height = 384 
+        width = self.map.info.width
+        height = self.map.info.height
 
         # get origin coordinates
         #HARD CODE FOR NOW 
         # x_origin = -10
         # y_origin = -10 
-        #x_origin = self.map.info.origin.position.x
-        #y_origin = self.map.info.origin.position.y
+        x_origin = self.map.info.origin.position.x
+        y_origin = self.map.info.origin.position.y
      
         # delimeters for chopping space into squares
         # delim = (self.square_side_len/2)/resolution
         # delim2 = int(self.square_side_len/resolution)
 
-        # get a 2d array x by y where each entry is ((real_x, real_y), valid) TODO: Implement origin and delim/reso ???
+        # get a 2d array x by y where each entry is ((real_x, real_y), valid)
         x_coors_array = math.ceil(width / self.square_side_len)
         y_coors_array = math.ceil(height / self.square_side_len)
 
@@ -141,7 +139,8 @@ class Grid:
             elif edge == 'xy':
                 x_mid = x*self.square_side_len+.5*(width - x*self.square_side_len)
                 y_mid = y*self.square_side_len+.5*(height - y*self.square_side_len)
-            return (x_mid, y_mid)
+            ind = x_mid + y_mid*width
+            return convert_to_real_coords(ind, height, x_origin, y_origin, resolution)
 
         def get_valid(x,y, edge):
             x_end = x*self.square_side_len+self.square_side_len
@@ -156,7 +155,7 @@ class Grid:
             for x in range(x*self.square_side_len, x_end):
                 for y in range(y*self.square_side_len, y_end):
                     ind = x + y*width
-                    if self.map.data[ind] > 0:
+                    if self.map.data[ind] != 0:
                         return False
             return True
 
@@ -186,68 +185,7 @@ class Grid:
 
         self.possible_states = possible_states_double
         print(self.possible_states)
-
-        # get list of indexes (flatten 2D array into 1D array)
-        # flat_map = []
-        # for i in range(width):
-        #     for j in range(height):
-        #         indx = (i*width+j)
-        #         flat_map.append(indx)
-
-        # regroup indexes into groups of size delim2
-        # temp_squares = self.group_elements(delim2, flat_map)
-        # temp_squares = [flat_map[n:n+delim2] for n in range(0, len(flat_map), delim2)]
-
-        # keep only the midpoint of the square
-        # for square in temp_squares:
-        #     for cell in square:
-        #         if (cell != 0) and (cell % delim-1 == 0) and (cell % delim2-1 != 0):
-        #             self.squares.append(cell)
-
-        # convert indexes into real coordinates
-        # for el in self.squares:
-        #     coord = convert_to_real_coords(el, height, x_origin, y_origin, resolution)
-        #     indx = self.squares.index(el)
-        #     self.squares[indx] = [el, coord]
-
-        # valid_squares = []
-        # remove any invalid squares from our list of squares
-        # for el in self.squares:
-        #     indx = el[0]
-            #should be self.map.data[indx] but hard coding in alt for now 
-            #if(self.map.data[indx] == 0):
-            # if(map_data[indx] == 0):
-            #     el.pop(0)
-                # package coordinates plus orientation into Position class
-                # sqr = Position(el[0][0], el[0][1], -1)
-                # valid_squares.append(sqr)
-
-        # now we should have a states list with only valid square midpoints, yay!
-        # permuate the possible states based on the squares and orientations
-        # state_list = []
-        # print("BEFORE PERMUTING DIRECTIONS")
-        # print(len(valid_squares))
-        # for square in valid_squares:
-        #     for x in range(4):
-        #         temp_sqr = copy.deepcopy(square)
-        #         temp_sqr.z = x
-        #         state_list.append(temp_sqr)
-        # print("BEFORE PAIRING UP CAT MOUSE")
-        # print(len(state_list))
-        # # make the state include all possible combos of tom and jerry positions
-        # num_states = len(state_list)
-        # outer_loop_counter = 0
-        # for state in state_list:
-        #     inner_loop_counter = 0
-        #     for state2 in state_list:
-        #         tom = state_list[outer_loop_counter]
-        #         jerry = state_list[inner_loop_counter]
-        #         new_state = State(tom, jerry)
-        #         self.states.append(new_state)
-        #         inner_loop_counter += 1
-        #     outer_loop_counter += 1
-        # print("AFTER PAIRING")
-        # print(len(self.states))
+        
     # helper function, checks if it is possible for a single agent to move
     # from one state to the next
     def possible_transition_helper(self, state1, state2):
