@@ -110,6 +110,7 @@ class Grid:
         def get_midpoint(x, y, edge):
             x_mid = x*self.square_side_len+.5*self.square_side_len
             y_mid = y*self.square_side_len+.5*self.square_side_len
+            print(f"{x_mid},{y_mid}")
             if edge == 'x':
                 x_mid = x*self.square_side_len+.5*(width - x*self.square_side_len)
             elif edge == 'y':
@@ -119,6 +120,7 @@ class Grid:
                 y_mid = y*self.square_side_len+.5*(height - y*self.square_side_len)
             x_coord = x_origin + (x_mid * resolution)
             y_coord = y_origin + (y_mid * resolution)
+            print(f"{x_coord},{y_coord}")
             return (x_coord, y_coord)
 
         def get_valid(x,y, edge):
@@ -141,6 +143,7 @@ class Grid:
         # set real midpoint coordintes and valid state
         for x in range(x_coors_array):
             for y in range(y_coors_array):
+                print(f"{x},{y}")
                 edge = ''
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
