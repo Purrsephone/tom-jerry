@@ -147,7 +147,7 @@ class Grid:
                 print(coors_array[x][y])
 
         self.coors_array = coors_array
-        print(coors_array[0][0])
+        print(coors_array)
         
 
         # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
