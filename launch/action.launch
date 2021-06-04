@@ -21,7 +21,7 @@
   <group ns="tom">
     <param name="tf_prefix" value="tom_tf" />
     <include file="$(find tom_and_jerry_project)/launch/one_robot.launch" >
-      <arg name="init_pose" value="-x 1 -y 1 -z 0" />
+      <arg name="init_pose" value="-x -6 -y 0 -z 0" />
       <arg name="robot_name"  value="tom" />
       <arg name="robot_description"  value="robot_description_tom" />
     </include>
@@ -31,7 +31,7 @@
   <group ns="jerry">
     <param name="tf_prefix" value="jerry_tf" />
     <include file="$(find tom_and_jerry_project)/launch/one_robot.launch" >
-      <arg name="init_pose" value="-x -1 -y 1 -z 0" />
+      <arg name="init_pose" value="-x -5 -y 1 -z 0" />
       <arg name="robot_name"  value="jerry" />
       <arg name="robot_description"  value="robot_description_jerry" />
     </include>
