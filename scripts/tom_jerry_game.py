@@ -11,8 +11,9 @@ class TJGame(object):
     Acts as an interface between state.py and minimax_qlearning.py
     Note that the cat is the maximizer and the mouse is the minimizer
     """
-    def __init__(self, compute_game_info_from_state:bool, compute_game_info_abstractly:bool, load_from_file:bool, game_info_prefix:str, cheese_locations):
+    def __init__(self, compute_game_info_from_state:bool, compute_game_info_abstractly:bool, load_from_file:bool, game_info_prefix:str, cheese_locations, board_size):
         self.path_prefix = os.path.dirname(__file__) + '/state_action_matrices/' + game_info_prefix
+        self.board_size = board_size
         if compute_game_info_from_state:
             self.grid = ST.Grid()
             self.grid.run()
@@ -31,7 +32,6 @@ class TJGame(object):
                 self.state_action_matrix.append(sam_row)
             self.save_info()
         elif compute_game_info_abstractly:
-            self.board_size = 7
             self.positions = []
             for x in range(self.board_size):
                 for y in range(self.board_size):
@@ -46,8 +46,8 @@ class TJGame(object):
                     
             self.generate_state_index_dict()
 
-            self.maximizer_actions = [0,1,2,3]
-            self.minimizer_actions = [0,1,2,3]
+            self.maximizer_actions = [0,1,2]
+            self.minimizer_actions = [0,1,2]
             self.state_action_matrix = []
             for state in self.states:
                 state_action_row = []
@@ -174,7 +174,7 @@ class TJGame(object):
             return -100
         elif self.snack_time(next_state):
             return 100
-        else: # pressure cat to go after mouse
+        else: # pressure cat to go after mouse?
             return 0
         
 
@@ -260,6 +260,6 @@ class TJGame(object):
 
 
 if __name__ == "__main__":
-    game_info_calc = TJGame(False, True, load_from_file=False, game_info_prefix="TJGame1", cheese_locations={})
-    #game_info_calc = TJGame(False, False, load_from_file=True, game_info_prefix="TJGame1", cheese_locations={})
+    game_info_calc = TJGame(False, True, load_from_file=False, game_info_prefix="TJGame1", cheese_locations={}, board_size = 7)
+    #game_info_calc = TJGame(False, False, load_from_file=True, game_info_prefix="TJGame1", cheese_locations={}, board_size = 7)
     game_info_calc.print_board_positions()
