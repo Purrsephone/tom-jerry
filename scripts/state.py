@@ -165,6 +165,9 @@ class Grid:
                 coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
 
         self.coors_array = coors_array
+        print("yo")
+        print(coors_array)
+        
 
         # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
         possible_states_single = []
@@ -180,7 +183,7 @@ class Grid:
         possible_states_double = list(product(possible_states_single, possible_states_single))
 
         self.possible_states = possible_states_double
-        print(self.possible_states)
+        print(len(self.possible_states))
 
     # helper function, checks if it is possible for a single agent to move
     # from one state to the next
