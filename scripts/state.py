@@ -160,20 +160,20 @@ class Grid:
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
                 elif y == y_coors_array-1: edge = 'y'
-                coors_array[x,y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
+                coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
 
         # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
         possible_states_single = []
 
         for x in range(x_coors_array):
             for y in range(y_coors_array):
-                if coors_array[x,y][1] == True:
+                if coors_array[x][y][1] == True:
                     possible_states_single.append((x,y))
 
-        possible_states_double = list(product(possible_states_single, 2))
+        possible_states_double = list(product(possible_states_single, possible_states_single))
         possible_states_all = list(product(possible_states_double, [0,1,2,3]))
 
-
+        print(possible_states_all)
 
         # get list of indexes (flatten 2D array into 1D array)
         # flat_map = []
