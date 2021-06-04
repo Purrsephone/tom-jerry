@@ -4,7 +4,25 @@
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
 
+  <!-- startup simulated world -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find turtlebot3_gazebo)/worlds/turtlebot3_house.world"/>
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="gui" value="$(arg gui)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="false"/>
+    <arg name="debug" value="false"/>
+  </include>
+
   <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch" />
+
+  <param name="robot_description_tom" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_waffle.urdf.xacro" />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf_tom" args="-urdf -model tom -x -6 -y 0 -z 0 -param robot_description_tom" />
+
+  <param name="robot_description_jerry" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_burger.urdf.xacro" />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf_jerry" args="-urdf -model jerry -x -5 -y 1 -z 0 -param robot_description_jerry" />
 
   <param name="robot_description_tom" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_waffle.urdf.xacro" />
 
