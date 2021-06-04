@@ -11,21 +11,6 @@ from fake_data import *
 import copy 
 from itertools import product
 
-# Given an index and info about map, compute its real coordinate
-# returns an array [x, y]
-def convert_to_real_coords(indx, height, orx, ory, res):
-
-    # Convert the x and y indexes from row-major order
-    x_val = indx % height
-    y_val = math.floor(indx/height)
-
-    # Scale our x and y indexes to the size and resolution of our map
-    x_coord = orx + (x_val * res)
-    y_coord = ory + (y_val * res)
-
-    # Create a new coordinate
-    return(x_coord, y_coord)
-
 # define a position class which is composed of an x, y coordinate
 # pair plus an orientation (0, 1, 2, or 3)
 # let 0 = North, 1 = East, 2 = South, 3 = West
@@ -129,6 +114,21 @@ class Grid:
 
         coors_array = [[None]*y_coors_array] * x_coors_array
 
+        # Given an index and info about map, compute its real coordinate
+        # returns an array [x, y]
+        def convert_to_real_coords(indx, height, orx, ory, res):
+
+            # Convert the x and y indexes from row-major order
+            x_val = indx % height
+            y_val = math.floor(indx/height)
+
+            # Scale our x and y indexes to the size and resolution of our map
+            x_coord = orx + (x_val * res)
+            y_coord = ory + (y_val * res)
+
+            # Create a new coordinate
+            return(x_coord, y_coord)
+
         def get_midpoint(x, y, edge):
             x_mid = x*self.square_side_len+.5*self.square_side_len
             y_mid = y*self.square_side_len+.5*self.square_side_len
@@ -185,7 +185,7 @@ class Grid:
 
         self.possible_states = possible_states_double
         print(self.possible_states)
-        
+
     # helper function, checks if it is possible for a single agent to move
     # from one state to the next
     def possible_transition_helper(self, state1, state2):
