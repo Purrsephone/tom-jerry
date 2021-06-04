@@ -105,7 +105,7 @@ class Grid:
         x_coors_array = math.ceil(width / self.square_side_len)
         y_coors_array = math.ceil(height / self.square_side_len)
 
-        coors_array = [[None]*y_coors_array] * x_coors_array
+        coors_array = np.array((x_coors_array, y_coors_array))
         print(coors_array)
 
         def get_midpoint(x, y, edge):
@@ -150,7 +150,6 @@ class Grid:
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
                 elif y == y_coors_array-1: edge = 'y'
-                if coors_array[x][y] is not None: print(f"occupied by: {coors_array[x][y]}") 
                 coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
                 print(coors_array[x][y])
 
