@@ -99,10 +99,10 @@ class Grid:
 
         # get origin coordinates
         #HARD CODE FOR NOW 
-        # x_origin = -10
-        # y_origin = -10 
-        x_origin = self.map.info.origin.position.x
-        y_origin = self.map.info.origin.position.y
+        x_origin = -10
+        y_origin = -10 
+        # x_origin = self.map.info.origin.position.x
+        # y_origin = self.map.info.origin.position.y
 
         # get a 2d array x by y where each entry is ((real_x, real_y), valid)
         x_coors_array = math.ceil(width / self.square_side_len)
