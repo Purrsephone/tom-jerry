@@ -64,6 +64,8 @@ class Grid:
         # inialize our map
         self.map = OccupancyGrid()
 
+        self.possible_states = []
+
         # initialize squares
         self.squares = []
 
@@ -88,6 +90,8 @@ class Grid:
 
         # set up is complete
         self.initialized = True
+
+        self.run()
 
     # helper function that groups elements into groups of size n
     def group_elements(n, iterable, padvalue='x'):
@@ -175,7 +179,8 @@ class Grid:
         possible_states_double = list(product(possible_states_single, possible_states_single))
         possible_states_all = list(product(possible_states_double, [0,1,2,3]))
 
-        print(possible_states_all)
+        self.possible_states = possible_states_all
+        print(self.possible_states)
 
         # get list of indexes (flatten 2D array into 1D array)
         # flat_map = []
@@ -470,48 +475,48 @@ class Grid:
     def run(self):
         if self.initialized: 
             self.get_grid()
-            """
-            print(len(self.states))
-            for x in range(40):
-                print(self.states[x].catpos.x)
-                print(self.states[x].catpos.y)
-                print(self.states[x].catpos.z)
-            """
-            self.make_action_matrix_other()
-            self.make_action_list()
-            print("DONE HOMIE")
-            self.test_snack_time()
-            #print(len(self.action_matrix))
-            #self.publish_states()
-            #print(self.action_matrix)
-            #print(self.states)
-            #print(self.actions)
-            #print(self.states)
+            # """
+            # print(len(self.states))
+            # for x in range(40):
+            #     print(self.states[x].catpos.x)
+            #     print(self.states[x].catpos.y)
+            #     print(self.states[x].catpos.z)
+            # """
+            # self.make_action_matrix_other()
+            # self.make_action_list()
+            # print("DONE HOMIE")
+            # self.test_snack_time()
+            # #print(len(self.action_matrix))
+            # #self.publish_states()
+            # #print(self.action_matrix)
+            # #print(self.states)
+            # #print(self.actions)
+            # #print(self.states)
 
         else: 
             rospy.sleep(1)
 
             
-    def publish_states(self):
-        count = 0 
-        for state in self.states:
-               # publish all states
-                cat_msg = RobotCoord()
-                cat_msg.x_coord = state.catpos.x 
-                cat_msg.y_coord = state.catpos.y 
-                cat_msg.z_coord = state.catpos.z 
-                mouse_msg = RobotCoord()
-                mouse_msg.x_coord = state.mousepos.x 
-                mouse_msg.y_coord = state.mousepos.y 
-                mouse_msg.z_coord = state.mousepos.z 
-                state_msg = GameState()
-                state_msg.move_num = count 
-                state_msg.tom_coord = cat_msg  
-                state_msg.jerry_coord = mouse_msg
-                #TODO: fix the publishing 
-                #self.state_pub.publish(state_msg) 
-                count += 1
+    # def publish_states(self):
+    #     count = 0 
+    #     for state in self.states:
+    #            # publish all states
+    #             cat_msg = RobotCoord()
+    #             cat_msg.x_coord = state.catpos.x 
+    #             cat_msg.y_coord = state.catpos.y 
+    #             cat_msg.z_coord = state.catpos.z 
+    #             mouse_msg = RobotCoord()
+    #             mouse_msg.x_coord = state.mousepos.x 
+    #             mouse_msg.y_coord = state.mousepos.y 
+    #             mouse_msg.z_coord = state.mousepos.z 
+    #             state_msg = GameState()
+    #             state_msg.move_num = count 
+    #             state_msg.tom_coord = cat_msg  
+    #             state_msg.jerry_coord = mouse_msg
+    #             #TODO: fix the publishing 
+    #             #self.state_pub.publish(state_msg) 
+    #             count += 1
 
 if __name__ == "__main__": 
-    node = Grid()
-    node.run()
+    g = Grid()
+    rospy.spin()
