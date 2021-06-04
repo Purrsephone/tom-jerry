@@ -31,7 +31,7 @@ class ResetWorld(object):
 
         self.tom_coord = (tom_x, tom_y, tom_degree)
 
-        # TODO: add small robot model reset position and orientation of the small robot
+        # reset position and orientation of the small robot
         self.jerry_model_name = "jerry"
         jerry_x = -5
         jerry_y = 1.0
@@ -42,7 +42,7 @@ class ResetWorld(object):
 
         self.jerry_coord = (jerry_x, jerry_y, jerry_degree)
 
-        # TODO: reset position of cheese (randomize?) and add cheese models
+        # position of cheese 
         self.cheese_coords = [(1,2,0), (4,6,0)]
 
         # flag to keep track of the state of when we're resetting the world and when we're not
@@ -75,30 +75,35 @@ class ResetWorld(object):
         if data.move_num != self.iteration_num: #TODO: not sure about this
             is_next_move = True
 
+        # if the world is not being reset we check to see what rewards to give
         if (is_next_move and not self.reset_world_in_progress):
             tom_wins = False
             jerry_wins = False
 
-            # assign reward
+            # assign reward for tom winning when tom and jerry occupy the same coordinates
             if self.tom_coord[0] == self.jerry_coord[0] and self.tom_coord[1] == self.jerry_coord[1]:
                 tom_wins = True 
                 tom_reward = self.positive_reward_amount
                 print(f"Tom caught jerry at {self.tom_coord[0]},{self.tom_coord[1]}")
+            # if tom did not win then give him a negative reaward
             else:
                 tom_reward = self.negative_reward_amount
+            # assign reward for jerry winning when jerry and cheese occupy the same coordinates
             if (self.jerry_coord[0], self.jerry_coord[1], 0) in self.cheese_coords and not tom_wins:
                 jerry_wins = True
                 jerry_reward = self.positive_reward_amount
                 print(f"Jerry got the cheese at {self.jerry_coord[0]},{self.jerry_coord[1]}")
+            # if jerry did not win then give him a negative reaward
             else:
                 jerry_reward = self.negative_reward_amount
 
-            # publish reward
+            # make reward message
             reward_msg = QLearningReward()
             reward_msg.header = Header(stamp=rospy.Time.now())
             reward_msg.reward_tom = tom_reward
             reward_msg.reward_jerry = jerry_reward            
             reward_msg.iteration_num = self.iteration_num
+            # publish reward message
             self.reward_pub.publish(reward_msg)
             print(f"Tom reward: {tom_reward}")
             print(f"Jerry reward: {jerry_reward}")
@@ -109,16 +114,19 @@ class ResetWorld(object):
             self.reset_world_in_progress = True
 
             # reset world
+            # rest tom
             p = Pose(position=self.tom_reset_position, orientation=self.tom_reset_orientation)
             t = Twist(linear=Vector3(0,0,0), angular=Vector3(0,0,0))
             tom_model_state = ModelState(model_name=self.tom_model_name, pose=p, twist=t)
             self.model_states_pub.publish(tom_model_state)
 
+            # reset jerry
             p = Pose(position=self.jerry_reset_position, orientation=self.jerry_reset_orientation)
             t = Twist(linear=Vector3(0,0,0), angular=Vector3(0,0,0))
             jerry_model_state = ModelState(model_name=self.jerry_model_name, pose=p, twist=t)
             self.model_states_pub.publish(jerry_model_state)
 
+        # if neither end condition is met we keep going
         elif (not (tom_wins or jerry_wins) and self.reset_world_in_progress):
             self.reset_world_in_progress = False
             self.iteration_num += 1
