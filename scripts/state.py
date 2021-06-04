@@ -2,7 +2,7 @@
 
 # necessary libraries
 import rospy
-import math
+import math, time
 import numpy as np
 from nav_msgs.msg import OccupancyGrid
 from itertools import zip_longest
@@ -164,6 +164,11 @@ class Grid:
         possible_states_double = list(product(possible_states_single, possible_states_single))
 
         self.possible_states = possible_states_double
+        self.state_index_dict = {}
+        state_counter = 0
+        for p_state in self.possible_states:
+            self.state_index_dict[(p_state[0][0], p_state[0][1], p_state[0][2], p_state[1][0], p_state[1][1], p_state[1][2])] = state_counter
+            state_counter += 1
         #print(len(self.possible_states))
 
 
@@ -292,7 +297,73 @@ class Grid:
         else:
             return -1 
     
+
+    # given a position and an action, returns the resulting position when 
+    # applying the given action, possibly returning an out of bounds state
+    def position_action_transition(self, position, action):
+        new_pos = copy.deepcopy(position)
+        if action == 0:
+            if position.z == 0:
+                new_pos.y += 1
+            elif position.z == 1:
+                new_pos.x += 1
+            elif position.z == 2:
+                new_pos.y += -1
+            elif position.z == 3:
+                new_pos.x += -1
+        elif action == 1:
+            new_pos.z = (position.z + 1) % 4
+        elif action == 2:
+            new_pos.z = (position.z - 1) % 4
+        return new_pos
+
+
+    # returns the state from the resulting action pair, or -1 if it is not valid
+    # self.states needs to be initialized.
+    def state_transition(self, state, max_action, min_action):
+        next_state = copy.deepcopy(state)
+        next_state.catpos = self.position_action_transition(state.catpos, max_action)
+        next_state.mousepos = self.position_action_transition(state.mousepos, min_action)
+        if self.in_bounds(next_state):
+            return next_state
+        else:
+            return -1
+
+    
+    # uses self.board_size to check if a state is in bounds
+    def in_bounds(self, state) -> bool:
+        self.board_size = len(self.coors_array)
+        cat_in_bounds = state.catpos.x <= self.board_size and state.catpos.y <= self.board_size
+        cat_in_bounds = cat_in_bounds and (state.catpos.x >= 0 and state.catpos.y >= 0)
+        mouse_in_bounds = state.mousepos.x <= self.board_size and state.mousepos.y <= self.board_size
+        mouse_in_bounds = mouse_in_bounds and (state.mousepos.x >= 0 and state.mousepos.y >= 0)
+        return cat_in_bounds and mouse_in_bounds
+
+
+    # makes a matrix of where states are rows and actions are columns
+    # with entries corresponding to the state following from the action or
+    # -1 if there is no resulting state
     def make_action_matrix_other(self):
+        self.state_action_matrix = []
+        for p_state in self.possible_states:
+            state = State(Position(p_state[0][0], p_state[0][1], p_state[0][2]), Position(p_state[1][0], p_state[1][1], p_state[1][2]))
+            state_action_row = []
+            for max_action in self.actions:
+                for min_action in self.actions:
+                    next_state = self.state_transition(state, max_action, min_action)
+                    if next_state == -1:
+                        state_action_row.append(next_state)
+                    else:
+                        state_action_row.append(self.get_index_of_state(next_state))
+            self.state_action_matrix.append(state_action_row)
+        
+    def get_index_of_state(self, state):
+        state_key = (state.catpos.x, state.catpos.y, state.catpos.z, state.mousepos.x, state.mousepos.y, state.mousepos.z)
+        if state_key in self.state_index_dict:
+            return self.state_index_dict[state_key]
+        return -1
+
+        """
         new_states = copy.deepcopy(self.states)
         num_states = len(self.states)
         self.action_matrix = np.empty((num_states, 16), dtype=object)
@@ -306,23 +377,22 @@ class Grid:
                     inner_loop_counter += 1 
             outer_loop_counter += 1
             #print(outer_loop_counter)
+        """
 
     # determines if cat can monch mouse 
     # cat can monch mouse if and only if 
     # 1 cat is in an adjacent square and 
     # 2 cat is not facing the opposite direction from mouse
     def snack_time(self, curr_state):
-        #HARD coding in res for now 
-        res = 0.05
-        sq_len = res * self.square_side_len
+        # Ignore resolution, state should be given as the integer board
         adjacent_square = False 
         if(curr_state.catpos.x == curr_state.mousepos.x):
-            if(abs(curr_state.catpos.y - curr_state.mousepos.y) <= sq_len):
+            if(abs(curr_state.catpos.y - curr_state.mousepos.y) <= 1):
                 adjacent_square = True 
             else:
                 adjacent_square = False 
         if(curr_state.catpos.y == curr_state.mousepos.y):
-            if(abs(curr_state.catpos.x - curr_state.mousepos.x) <= sq_len):
+            if(abs(curr_state.catpos.x - curr_state.mousepos.x) <= 1):
                 adjacent_square = True 
             else:
                 adjacent_square = False                
@@ -399,23 +469,17 @@ class Grid:
     def run(self):
         if self.initialized: 
             self.get_grid()
-            # """
-            # print(len(self.states))
-            # for x in range(40):
-            #     print(self.states[x].catpos.x)
-            #     print(self.states[x].catpos.y)
-            #     print(self.states[x].catpos.z)
-            # """
-            # self.make_action_matrix_other()
-            # self.make_action_list()
+            self.make_action_list()
+            self.make_action_matrix_other()
             # print("DONE HOMIE")
-            # self.test_snack_time()
+            self.test_snack_time()
             # #print(len(self.action_matrix))
             # #self.publish_states()
             # #print(self.action_matrix)
             # #print(self.states)
             # #print(self.actions)
             # #print(self.states)
+        
 
         else: 
             rospy.sleep(1)
@@ -443,4 +507,5 @@ class Grid:
 
 if __name__ == "__main__": 
     g = Grid()
-    rospy.spin()
+    print(g.possible_states)
+    #rospy.spin()

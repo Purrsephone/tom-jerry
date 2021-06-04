@@ -217,7 +217,6 @@ class TJGame(object):
 
 
 if __name__ == "__main__":
-    pass
-    #game_info_calc = TJGame(False, True, load_from_file=False, game_info_prefix="TJGame1", cheese_locations={})
+    game_info_calc = TJGame(True, False, load_from_file=False, game_info_prefix="TJGame1", cheese_locations={})
     #game_info_calc = TJGame(False, False, load_from_file=True, game_info_prefix="TJGame1", cheese_locations={})
-    #game_info_calc.print_board_positions()
+    game_info_calc.print_board_positions()

@@ -171,7 +171,7 @@ class QLearning(object):
 
 
     def publish_according_to_q_matrix(self):
-        #TODO
+        #TODO (need state topic)
         pass
     
 
