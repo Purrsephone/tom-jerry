@@ -2,7 +2,7 @@
 #Project Description   
 Our project is a game of cat and mouse between two robots we named “Tom” and “Jerry.” Jerry wins when he obtains the cheese, Tom wins when he catches Jerry. To avoid stalemates, Tom receives a penalty the longer he takes to catch Jerry (and accordingly Jerry gets a reward for staying alive longer). Our game is represented as a grid of squares, with Tom and Jerry traveling strictly along this grid. Neither Tom or Jerry are explicitly programmed to play this game, they were trained by a reinforcement learning algorithm known as the Minimax Q learning algorithm.This algorithm finds the optimal solution for both agents in the game in the sense both agents maximize their rewards assuming that their opponent is also maximizing their reward perfectly.
 
-#System Architecture    
+# System Architecture    
 ## *reset_world.py*   
 
 ## *Minimax Q Learning*: Minimax_Qlearning.py, Q_matrix.py, tom_jerry_game.py   
