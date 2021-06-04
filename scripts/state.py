@@ -64,6 +64,7 @@ class Grid:
         # inialize our map
         self.map = OccupancyGrid()
 
+        self.coors_array = []
         self.possible_states = []
 
         # initialize squares
@@ -168,18 +169,22 @@ class Grid:
                 elif y == y_coors_array-1: edge = 'y'
                 coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
 
+        self.coors_array = coors_array
+
         # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
         possible_states_single = []
 
         for x in range(x_coors_array):
             for y in range(y_coors_array):
                 if coors_array[x][y][1] == True:
-                    possible_states_single.append((x,y))
+                    possible_states_single.append((x,y,0))
+                    possible_states_single.append((x,y,1))
+                    possible_states_single.append((x,y,2))
+                    possible_states_single.append((x,y,3))
 
         possible_states_double = list(product(possible_states_single, possible_states_single))
-        possible_states_all = list(product(possible_states_double, [0,1,2,3]))
 
-        self.possible_states = possible_states_all
+        self.possible_states = possible_states_double
         print(self.possible_states)
 
         # get list of indexes (flatten 2D array into 1D array)
