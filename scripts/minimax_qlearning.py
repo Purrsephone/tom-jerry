@@ -5,6 +5,7 @@ import numpy as np
 import os
 import csv, time
 import qmatrix, tom_jerry_game #, rps_test, tictactoe_test
+#from tom_and_jerry_project.msg import Action
 
 
 class QLearning(object):
@@ -20,20 +21,20 @@ class QLearning(object):
         # Choose a game to train
         # self.TTTGame = tictactoe_test.TicTacToe()
         # self.RPSGame = rps_test.RPSGame()
-        self.TJGame = tom_jerry_game.TJGame(compute_game_info=False, load_from_file=True, game_info_prefix="TJGame1")
+        self.TJGame = tom_jerry_game.TJGame(False, False, True, "TJGame1", [(3,3), (5,5)])
         self.csv_name = 'q_matrixTJ.csv'
 
         # set training paramters
         self.learning_rate = 1
         self.learning_rate_decay_factor = 0.99999
         self.discount_factor = 0.5
-        self.explore_prob = 1 # need to fix for values < 1
+        self.explore_prob = 0.5
         self.max_iteration = 10000 # change this later
         # TODO change later if need be
-        self.initial_state = 0 
+        self.initial_state = self.TJGame.state_index_from_positions(5,0,0,0,0,0)
 
         # TODO set up subscribers and publishers for actual execution
-        self.action_pub = None #rospy.Publisher(action_topic, action_type, queue_size=10)
+        self.action_pub = None # rospy.Publisher(, Action, queue_size=10)
         self.state_sub = None #rospy.Subscriber(state_topic, state_type, self.state_update)
 
         # wait for publishers and subscribers to initialize
@@ -48,10 +49,17 @@ class QLearning(object):
                 action = np.random.choice(self.q_matrix.maximizer_actions)
             return action
         else: # choose action according to policy
-            action = np.random.choice(self.q_matrix.maximizer_actions, p=self.q_matrix.get_max_policy_probabilities(state))
-            while not self.q_matrix.valid_max_action(state, action):
-                action = np.random.choice(self.q_matrix.maximizer_actions, p=self.q_matrix.get_max_policy_probabilities(state))
-            return action
+            probabilities = self.q_matrix.get_max_policy_probabilities(state)
+            try:
+                action = np.random.choice(self.q_matrix.maximizer_actions, p=probabilities)
+                while not self.q_matrix.valid_max_action(state, action):
+                    action = np.random.choice(self.q_matrix.maximizer_actions, p=probabilities)
+                return action
+            except: # probabilites don't sum to 1, choose random action instead
+                action = np.random.choice(self.q_matrix.maximizer_actions)
+                while not self.q_matrix.valid_max_action(state, action):
+                    action = np.random.choice(self.q_matrix.maximizer_actions)
+                return action
 
 
     def choose_minimizer_action(self, state):
@@ -62,10 +70,17 @@ class QLearning(object):
                 action = np.random.choice(self.q_matrix.minimizer_actions)
             return action
         else: # choose action according to policy
-            action = np.random.choice(self.q_matrix.minimizer_actions, p=self.q_matrix.get_min_policy_probabilities(state))
-            while not self.q_matrix.valid_min_action(state, action):
-                action = np.random.choice(self.q_matrix.minimizer_actions, p=self.q_matrix.get_min_policy_probabilities(state))
-            return action
+            try:
+                probabilities = self.q_matrix.get_min_policy_probabilities(state)
+                action = np.random.choice(self.q_matrix.minimizer_actions, p=probabilities)
+                while not self.q_matrix.valid_min_action(state, action):
+                    action = np.random.choice(self.q_matrix.minimizer_actions, p=probabilities)
+                return action
+            except: # probabilities don't sum to 1, choose random action instead
+                action = np.random.choice(self.q_matrix.minimizer_actions)
+                while not self.q_matrix.valid_min_action(state, action):
+                    action = np.random.choice(self.q_matrix.minimizer_actions)
+                return action
 
     
     # given a state, returns its reward, dependent on game
@@ -115,13 +130,15 @@ class QLearning(object):
             ttt_info = self.TTTGame
             self.q_matrix = qmatrix.QMatrix(ttt_info.states, ttt_info.maximizer_actions, ttt_info.minimizer_actions, ttt_info.state_action_matrix)
         elif new_q_matrix:
-            self.q_matrix = qmatrix.QMatrix()
+            self.q_matrix = qmatrix.QMatrix(self.TJGame.states, self.TJGame.maximizer_actions, self.TJGame.minimizer_actions, self.TJGame.state_action_matrix)
         elif self.q_matrix is None:
             print("'self.q_matrix' should be initialized if calling `train_q_matrix` with 'new_q_matrix=false'; exiting")
             exit(-1)
         
         train:bool = True
         iteration:int = 0
+        num_games:int = 0
+        maximizer_wins:int = 0
         while train:
             current_state = self.initial_state
             game_over:bool = False
@@ -131,7 +148,8 @@ class QLearning(object):
                 next_state = self.q_matrix.next_state(current_state, max_action, min_action)
                 old_q_value = (1 - self.learning_rate)*self.q_matrix.get_q_matrix(current_state, max_action, min_action)
                 next_state_value = self.discount_factor*self.q_matrix.get_state_value(next_state)
-                q_value_adjustment = self.learning_rate*(self.reward(current_state, max_action, min_action) + next_state_value)
+                self.last_reward = self.reward(current_state, max_action, min_action)
+                q_value_adjustment = self.learning_rate*(self.last_reward + next_state_value)
                 new_q_value = old_q_value + q_value_adjustment
                 self.q_matrix.set_q_matrix(current_state, max_action, min_action, new_q_value)
                 self.q_matrix.update_maximizer_policy(current_state)
@@ -142,9 +160,13 @@ class QLearning(object):
                 iteration +=1
             if self.learning_rate < 0.05 or iteration >= self.max_iteration:
                 train=False
-            elif (iteration % 100) == 0:
-                print("Iteration:", iteration, "Learning Rate:", self.learning_rate)
-        print("Optimal Maximizer policy:", self.q_matrix.get_max_policy(0))
+            num_games += 1
+            if self.last_reward > 0:
+                maximizer_wins += 1
+            print("Game", num_games,  "Maximizer wins:", maximizer_wins, "Iteration:", iteration, "Learning Rate:", self.learning_rate)
+        print("Optimal Maximizer policy from initial_state:", self.q_matrix.get_max_policy(self.initial_state))
+        self.q_matrix.update_minimizer_policy(self.initial_state)
+        print("Optimal Minimizer policy from initial_state:", self.q_matrix.get_min_policy(self.initial_state))
         self.save_q_matrix(self.csv_name)
 
 
@@ -174,7 +196,7 @@ class QLearning(object):
 
 if __name__ == "__main__":
     ql = QLearning()
-    #ql.train_q_matrix(rps=False, ttt=False)
+    ql.train_q_matrix(rps=False, ttt=False)
 
     # test loading rps qmatrix and computing policy from it
     """
