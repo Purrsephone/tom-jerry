@@ -77,13 +77,14 @@ class Grid:
         self.action_matrix = []
 
         # subscribe to the map server
-        rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_grid)
+        rospy.Subscriber(self.map_topic, OccupancyGrid, self.get_map)
         
         # publish states 
         self.state_pub = rospy.Publisher("/q_learning/state", GameState, queue_size=10)
 
         # wait for things to be set up
         rospy.sleep(1)
+        print("I HATE IT HERE")
 
         # set up is complete
         self.initialized = True
@@ -92,9 +93,10 @@ class Grid:
     def group_elements(n, iterable, padvalue='x'):
         return zip_longest(*[iter(iterable)]*n, fillvalue=padvalue)
 
-    # given an occupancy grid, get info from it used to cut space into squares
-    def get_grid(self, data):
+    def get_map(self, data):
         self.map = data 
+    # given an occupancy grid, get info from it used to cut space into squares
+    def get_grid(self):
         # get resolution, height, and width
         #HARD CODE FOR NOW 
         #resolution = 0.05
@@ -467,7 +469,7 @@ class Grid:
     #THIS IS FOR YOU CARLOS 
     def run(self):
         if self.initialized: 
-            self.get_grid(self.map)
+            self.get_grid()
             """
             print(len(self.states))
             for x in range(40):
