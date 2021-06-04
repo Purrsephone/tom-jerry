@@ -39,7 +39,7 @@ class Grid:
         rospy.init_node('state')
 
         # side length of squares for states, 1 for now, can change
-        self.square_side_len = 60
+        self.square_side_len = 25
 
         # set the topic names and frame names
         self.map_topic = "map"
@@ -155,7 +155,7 @@ class Grid:
 
         for x in range(x_coors_array):
             for y in range(y_coors_array):
-                if coors_array[x][y][1] == True:
+                if coors_array[x][y][2] == 1:
                     possible_states_single.append((x,y,0))
                     possible_states_single.append((x,y,1))
                     possible_states_single.append((x,y,2))
@@ -164,7 +164,8 @@ class Grid:
         possible_states_double = list(product(possible_states_single, possible_states_single))
 
         self.possible_states = possible_states_double
-        print(len(self.possible_states))
+        #print(len(self.possible_states))
+
 
     # helper function, checks if it is possible for a single agent to move
     # from one state to the next
