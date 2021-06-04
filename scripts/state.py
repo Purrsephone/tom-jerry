@@ -154,6 +154,7 @@ class Grid:
         # set real midpoint coordintes and valid state
         for x in range(x_coors_array):
             for y in range(y_coors_array):
+                edge = ''
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
                 elif y == y_coors_array-1: edge = 'y'
