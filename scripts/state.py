@@ -5,7 +5,6 @@ import rospy
 import math, time
 import numpy as np
 from nav_msgs.msg import OccupancyGrid
-from itertools import zip_longest
 from tom_and_jerry_project.msg import QLearningReward, RobotCoord, GameState
 from fake_data import * 
 import copy 

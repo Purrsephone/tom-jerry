@@ -14,7 +14,9 @@
     <arg name="debug" value="false"/>
   </include>
 
+  <!-- WAFFLE DESC -->
   <param name="robot_description_tom" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_waffle.urdf.xacro" />
+  <!-- BURGER DESC -->
   <param name="robot_description_jerry" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_burger.urdf.xacro" />
 
   <!-- BEGIN ROBOT 1-->
@@ -41,10 +43,8 @@
   <node pkg="map_server" name="map_server" type="map_server" args="$(find tom_and_jerry_project)/map/house_map.yaml"/>
 
   <!-- Run a transformation between the map and odom frames -->
-  <!-- <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="-2.75 1.0 0 0 0 0 /map /odom 100" /> -->
   <node pkg="tf" type="static_transform_publisher" name="link1_broadcaster" args="0 0 0 0 0 0 /map /odom 100" />
-
-
+  
   <!-- run q_learing_actions -->
   <node name="Q_learning_Actions" pkg="tom_and_jerry_project" type="minimax_qlearning.py" respawn="false" output="screen"/>
   <!-- run q matrix scripts -->
