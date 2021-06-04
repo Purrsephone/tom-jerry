@@ -86,23 +86,20 @@ class Grid:
     # given an occupancy grid, get info from it used to cut space into squares
     def get_grid(self):
         # get resolution, height, and width
-        #HARD CODE FOR NOW 
-        resolution = 0.05
-        # resolution = self.map.info.resolution
+        #HARD CODE FOR NOW
+        resolution = self.map.info.resolution
         print("RES  BOI")
         print(resolution)
         #HARD CODE FOR NOW 
-        width = 384 
-        height = 384 
-        # width = self.map.info.width
-        # height = self.map.info.height
+        width = self.map.info.width
+        height = self.map.info.height
+        print(f"{width}:{height}")
 
         # get origin coordinates
         #HARD CODE FOR NOW 
-        x_origin = -10
-        y_origin = -10 
-        # x_origin = self.map.info.origin.position.x
-        # y_origin = self.map.info.origin.position.y
+        x_origin = self.map.info.origin.position.x
+        y_origin = self.map.info.origin.position.y
+        print(f"{x_origin},{y_origin}")
 
         # get a 2d array x by y where each entry is ((real_x, real_y), valid)
         x_coors_array = math.ceil(width / self.square_side_len)
