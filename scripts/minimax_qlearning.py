@@ -4,8 +4,9 @@ import rospy
 import numpy as np
 import os
 import csv, time
-import qmatrix, tom_jerry_game #, rps_test, tictactoe_test
-#from tom_and_jerry_project.msg import Action
+import qmatrix, tom_jerry_game
+from rospy.core import rospyinfo #, rps_test, tictactoe_test
+from tom_and_jerry_project.msg import Action, GameState
 
 
 class QLearning(object):
@@ -34,8 +35,7 @@ class QLearning(object):
         self.initial_state = self.TJGame.state_index_from_positions(5,0,0,0,0,0)
 
         # TODO set up subscribers and publishers for actual execution
-        self.action_pub = None # rospy.Publisher(, Action, queue_size=10)
-        self.state_sub = None #rospy.Subscriber(state_topic, state_type, self.state_update)
+        self.action_pub = rospy.Publisher("/action", Action, queue_size=200)
 
         # wait for publishers and subscribers to initialize
         time.sleep(1)
@@ -170,10 +170,21 @@ class QLearning(object):
         self.save_q_matrix(self.csv_name)
 
 
-    def publish_according_to_q_matrix(self):
-        #TODO (need state topic)
-        pass
-    
+    # call this after initializing to spin and setup for publishing
+    def publish_according_to_state_update(self):
+        self.explore_prob = 0
+        # state_index = self.TJGame.state_index_from_positions(data.tom_coord.x_coord, data.tom_coord.y_coord, data.tom_coord.z_coord, data.jerry_coord.x_coord, data.jerry_coord.y_coord, data.jerry_coord.z_coord)
+        current_state = self.initial_state
+        while True:
+            self.q_matrix.update_maximizer_policy(current_state)
+            self.q_matrix.update_minimizer_policy(current_state)
+            max_action = self.choose_maximizer_action(current_state)
+            min_action = self.choose_minimizer_action(current_state)
+            action_msg = Action(max_action, min_action)
+            self.action_pub.publish(action_msg)
+            current_state = self.TJGame.state_transition(self.TJGame.states[current_state], max_action, min_action)
+            time.sleep(1)
+
 
     def save_q_matrix(self, csv_name):
         with open(self.path_prefix + csv_name, 'w') as csvfile:
@@ -196,8 +207,8 @@ class QLearning(object):
 
 if __name__ == "__main__":
     ql = QLearning()
-    ql.train_q_matrix(rps=False, ttt=False)
-
+    # ql.train_q_matrix(rps=False, ttt=False)
+    ql.publish_according_to_state_update()
     # test loading rps qmatrix and computing policy from it
     """
     rps_info = rps_test.RPSGame()
