@@ -4,6 +4,8 @@
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
 
+  <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch" />
+
   <!-- Map server -->
   <node pkg="map_server" name="map_server" type="map_server" args="$(find particle_filter_project)/map/house_map.yaml"/>
 
