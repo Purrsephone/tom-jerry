@@ -107,21 +107,6 @@ class Grid:
 
         coors_array = [[None]*y_coors_array] * x_coors_array
 
-        # Given an index and info about map, compute its real coordinate
-        # returns an array [x, y]
-        def convert_to_real_coords(indx, height, orx, ory, res):
-
-            # Convert the x and y indexes from row-major order
-            x_val = indx % height
-            y_val = math.floor(indx/height)
-
-            # Scale our x and y indexes to the size and resolution of our map
-            x_coord = orx + (x_val * res)
-            y_coord = ory + (y_val * res)
-
-            # Create a new coordinate
-            return(x_coord, y_coord)
-
         def get_midpoint(x, y, edge):
             x_mid = x*self.square_side_len+.5*self.square_side_len
             y_mid = y*self.square_side_len+.5*self.square_side_len
@@ -132,8 +117,9 @@ class Grid:
             elif edge == 'xy':
                 x_mid = x*self.square_side_len+.5*(width - x*self.square_side_len)
                 y_mid = y*self.square_side_len+.5*(height - y*self.square_side_len)
-            ind = x_mid + y_mid*width
-            return convert_to_real_coords(ind, height, x_origin, y_origin, resolution)
+            x_coord = x_origin + (x_mid * resolution)
+            y_coord = y_origin + (y_mid * resolution)
+            return (x_coord, y_coord)
 
         def get_valid(x,y, edge):
             x_end = x*self.square_side_len+self.square_side_len
@@ -162,7 +148,6 @@ class Grid:
                 coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
 
         self.coors_array = coors_array
-        print("yo")
         print(coors_array)
         
 
