@@ -6,6 +6,14 @@
 
   <include file="$(find turtlebot3_gazebo)/launch/turtlebot3_house.launch" />
 
+  <param name="robot_description_tom" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_waffle.urdf.xacro" />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf_tom" args="-urdf -model tom -x -6 -y 0 -z 0 -param robot_description_tom" />
+
+  <param name="robot_description_jerry" command="$(find xacro)/xacro --inorder $(find turtlebot3_description)/urdf/turtlebot3_burger.urdf.xacro" />
+
+  <node pkg="gazebo_ros" type="spawn_model" name="spawn_urdf_jerry" args="-urdf -model jerry -x -5 -y 1 -z 0 -param robot_description_jerry" />
+
   <!-- Map server -->
   <node pkg="map_server" name="map_server" type="map_server" args="$(find particle_filter_project)/map/house_map.yaml"/>
 
@@ -17,6 +25,6 @@
   <node name="state" pkg="tom_and_jerry_project" type="state.py" respawn="false" output="screen"/>
   
   <!-- run world restting node -->
-  <!-- <node name="reset_world_q_learning" pkg="tom_and_jerry_project" type="reset_world.py" respawn="true" /> -->
+  <node name="reset_world_q_learning" pkg="tom_and_jerry_project" type="reset_world.py" respawn="true" />
 
 </launch>
