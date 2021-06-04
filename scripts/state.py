@@ -93,12 +93,14 @@ class Grid:
         return zip_longest(*[iter(iterable)]*n, fillvalue=padvalue)
 
     # given an occupancy grid, get info from it used to cut space into squares
-    def get_grid(self):
+    def get_grid(self, data):
+        self.map = data 
         # get resolution, height, and width
         #HARD CODE FOR NOW 
-        resolution = 0.05
-        #resolution = self.map.info.resolution
-        
+        #resolution = 0.05
+        resolution = self.map.info.resolution
+        print("RES  BOI")
+        print(resolution)
         #HARD CODE FOR NOW 
         width = 384 
         height = 384 
@@ -465,7 +467,7 @@ class Grid:
     #THIS IS FOR YOU CARLOS 
     def run(self):
         if self.initialized: 
-            self.get_grid()
+            self.get_grid(self.map)
             """
             print(len(self.states))
             for x in range(40):
