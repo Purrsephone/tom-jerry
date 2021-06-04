@@ -87,15 +87,15 @@ class Grid:
     def get_grid(self):
         # get resolution, height, and width
         #HARD CODE FOR NOW 
-        #resolution = 0.05
-        resolution = self.map.info.resolution
+        resolution = 0.05
+        # resolution = self.map.info.resolution
         print("RES  BOI")
         print(resolution)
         #HARD CODE FOR NOW 
-        # width = 384 
-        # height = 384 
-        width = self.map.info.width
-        height = self.map.info.height
+        width = 384 
+        height = 384 
+        # width = self.map.info.width
+        # height = self.map.info.height
 
         # get origin coordinates
         #HARD CODE FOR NOW 
@@ -103,10 +103,6 @@ class Grid:
         # y_origin = -10 
         x_origin = self.map.info.origin.position.x
         y_origin = self.map.info.origin.position.y
-     
-        # delimeters for chopping space into squares
-        # delim = (self.square_side_len/2)/resolution
-        # delim2 = int(self.square_side_len/resolution)
 
         # get a 2d array x by y where each entry is ((real_x, real_y), valid)
         x_coors_array = math.ceil(width / self.square_side_len)
