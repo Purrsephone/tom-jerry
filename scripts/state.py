@@ -97,12 +97,12 @@ class Grid:
         y_coors_array = math.ceil(height / self.square_side_len)
 
         coors_array = np.zeros((x_coors_array, y_coors_array), dtype=(float,3))
-        print(coors_array)
+        #print(coors_array)
 
         def get_midpoint(x, y, edge):
             x_mid = x*self.square_side_len+.5*self.square_side_len
             y_mid = y*self.square_side_len+.5*self.square_side_len
-            print(f"{x_mid},{y_mid}")
+            #print(f"{x_mid},{y_mid}")
             if edge == 'x':
                 x_mid = x*self.square_side_len+.5*(width - x*self.square_side_len)
             elif edge == 'y':
@@ -112,7 +112,7 @@ class Grid:
                 y_mid = y*self.square_side_len+.5*(height - y*self.square_side_len)
             x_coord = x_origin + (x_mid * resolution)
             y_coord = y_origin + (y_mid * resolution)
-            print(f"{x_coord},{y_coord}")
+            #print(f"{x_coord},{y_coord}")
             return (x_coord, y_coord)
 
         def get_valid(x,y, edge):
@@ -134,9 +134,9 @@ class Grid:
 
         # set real midpoint coordintes and valid state
         for x in range(x_coors_array):
-            print("----------------------")
+            #print("----------------------")
             for y in range(y_coors_array):
-                print(f"{x},{y}")
+                #print(f"{x},{y}")
                 edge = ''
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
@@ -144,10 +144,8 @@ class Grid:
                 x_mid, y_mid = get_midpoint(x, y, edge)
 
                 coors_array[x][y] = (x_mid, y_mid, get_valid(x, y, edge))
-                print(coors_array[x][y])
 
         self.coors_array = coors_array
-        print(coors_array)
         
 
         # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
@@ -507,5 +505,4 @@ class Grid:
 
 if __name__ == "__main__": 
     g = Grid()
-    print(g.possible_states)
     #rospy.spin()

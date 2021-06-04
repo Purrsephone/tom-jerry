@@ -5,8 +5,8 @@ import numpy as np
 import os
 import csv, time
 import qmatrix, tom_jerry_game
-from rospy.core import rospyinfo #, rps_test, tictactoe_test
-from tom_and_jerry_project.msg import Action, GameState
+# import , rps_test, tictactoe_test
+from tom_and_jerry_project.msg import Action
 
 
 class QLearning(object):
@@ -22,23 +22,17 @@ class QLearning(object):
         # Choose a game to train
         # self.TTTGame = tictactoe_test.TicTacToe()
         # self.RPSGame = rps_test.RPSGame()
-        self.TJGame = tom_jerry_game.TJGame(False, False, True, "TJGame1", [(3,3), (5,5)])
-        self.csv_name = 'q_matrixTJ.csv'
+        self.TJGame = tom_jerry_game.TJGame(False, False, True, "TJGame1", [(4,4), (5,1), (6,6)])
+        self.csv_name = 'q_matrixTJV.csv'
 
         # set training paramters
         self.learning_rate = 1
-        self.learning_rate_decay_factor = 0.99999
+        self.learning_rate_decay_factor = 0.999995
         self.discount_factor = 0.5
         self.explore_prob = 0.5
-        self.max_iteration = 10000 # change this later
-        # TODO change later if need be
-        self.initial_state = self.TJGame.state_index_from_positions(5,0,0,0,0,0)
-
-        # TODO set up subscribers and publishers for actual execution
-        self.action_pub = rospy.Publisher("/action", Action, queue_size=200)
-
-        # wait for publishers and subscribers to initialize
-        time.sleep(1)
+        self.max_iteration = 150000
+        # change later if need be
+        self.initial_state = self.TJGame.state_index_from_positions(6,0,0,0,0,0)
 
 
     def choose_maximizer_action(self, state):
@@ -153,6 +147,7 @@ class QLearning(object):
                 new_q_value = old_q_value + q_value_adjustment
                 self.q_matrix.set_q_matrix(current_state, max_action, min_action, new_q_value)
                 self.q_matrix.update_maximizer_policy(current_state)
+                self.q_matrix.update_minimizer_policy(current_state)
                 self.q_matrix.update_value(current_state)
                 game_over = self.check_game_over(current_state, max_action, min_action)
                 current_state = next_state
@@ -172,6 +167,9 @@ class QLearning(object):
 
     # call this after initializing to spin and setup for publishing
     def publish_according_to_state_update(self):
+        self.action_pub = rospy.Publisher("/action", Action, queue_size=200)
+        # wait for publisher to initialize
+        time.sleep(1)
         self.explore_prob = 0
         # state_index = self.TJGame.state_index_from_positions(data.tom_coord.x_coord, data.tom_coord.y_coord, data.tom_coord.z_coord, data.jerry_coord.x_coord, data.jerry_coord.y_coord, data.jerry_coord.z_coord)
         current_state = self.initial_state
@@ -207,8 +205,8 @@ class QLearning(object):
 
 if __name__ == "__main__":
     ql = QLearning()
-    # ql.train_q_matrix(rps=False, ttt=False)
-    ql.publish_according_to_state_update()
+    ql.train_q_matrix(rps=False, ttt=False)
+    # ql.publish_according_to_state_update()
     # test loading rps qmatrix and computing policy from it
     """
     rps_info = rps_test.RPSGame()

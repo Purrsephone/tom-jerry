@@ -13,8 +13,8 @@ class TJGame(object):
     """
     def __init__(self, compute_game_info_from_state:bool, compute_game_info_abstractly:bool, load_from_file:bool, game_info_prefix:str, cheese_locations):
         self.path_prefix = os.path.dirname(__file__) + '/state_action_matrices/' + game_info_prefix
-        self.grid = ST.Grid()
         if compute_game_info_from_state:
+            self.grid = ST.Grid()
             self.grid.run()
             self.states = self.grid.states
             self.maximizer_actions = copy.deepcopy(self.grid.actions) 
@@ -31,7 +31,7 @@ class TJGame(object):
                 self.state_action_matrix.append(sam_row)
             self.save_info()
         elif compute_game_info_abstractly:
-            self.board_size = 6
+            self.board_size = 7
             self.positions = []
             for x in range(self.board_size):
                 for y in range(self.board_size):
@@ -43,7 +43,9 @@ class TJGame(object):
                 for mousepos in self.positions:
                     new_state = ST.State(catpos, mousepos)
                     self.states.append(new_state)
-            
+                    
+            self.generate_state_index_dict()
+
             self.maximizer_actions = [0,1,2,3]
             self.minimizer_actions = [0,1,2,3]
             self.state_action_matrix = []
@@ -60,17 +62,19 @@ class TJGame(object):
             self.save_info()
         elif load_from_file:
             self.load_info()
-
-        self.state_index_dict = {}
-        state_counter = 0
-        for state in self.states:
-            self.state_index_dict[(state.catpos.x, state.catpos.y, state.catpos.z, state.mousepos.x, state.mousepos.y, state.mousepos.z)] = state_counter
-            state_counter += 1
+            self.generate_state_index_dict()
 
         
         # a list of pairs (x, y) where (x, y) is in the list
         # if we cheese is at the location (x, y)
         self.cheese_locations = cheese_locations
+
+    def generate_state_index_dict(self):
+        self.state_index_dict = {}
+        state_counter = 0
+        for state in self.states:
+            self.state_index_dict[(state.catpos.x, state.catpos.y, state.catpos.z, state.mousepos.x, state.mousepos.y, state.mousepos.z)] = state_counter
+            state_counter += 1
 
 
     def save_info(self):
@@ -122,17 +126,56 @@ class TJGame(object):
                 for resulting_state in row:
                     state_row.append(int(resulting_state))
                 self.state_action_matrix.append(state_row)
-                
+    
+
+    # determines if cat can monch mouse 
+    # cat can monch mouse if and only if 
+    # 1 cat is in an adjacent square and 
+    # 2 cat is not facing the opposite direction from mouse
+    def snack_time(self, curr_state):
+        # Ignore resolution, state should be given as the integer board
+        adjacent_square = False 
+        if(curr_state.catpos.x == curr_state.mousepos.x):
+            if(abs(curr_state.catpos.y - curr_state.mousepos.y) <= 1):
+                adjacent_square = True 
+            else:
+                adjacent_square = False 
+        if(curr_state.catpos.y == curr_state.mousepos.y):
+            if(abs(curr_state.catpos.x - curr_state.mousepos.x) <= 1):
+                adjacent_square = True 
+            else:
+                adjacent_square = False                
+        if(adjacent_square == True):
+            # cat is west of mouse
+            if(curr_state.catpos.x < curr_state.mousepos.x):
+                if(curr_state.catpos.z == 3):
+                    return False 
+            # cat is east of mouse
+            if(curr_state.catpos.x > curr_state.mousepos.x):
+                if(curr_state.catpos.z == 1):
+                    return False 
+              # cat is north of mouse
+            if(curr_state.catpos.y > curr_state.mousepos.y):
+                if(curr_state.catpos.z == 0):
+                    return False 
+              # cat is south of mouse
+            if(curr_state.catpos.y > curr_state.mousepos.y):
+                if(curr_state.catpos.z == 2):
+                    return False 
+            return True 
+        else: 
+            return False 
+
 
     def reward(self, state, cat_action, mouse_action):
         next_state_index = self.state_action_matrix[state][cat_action*len(self.maximizer_actions) + mouse_action]
         next_state = self.states[next_state_index]
         if (next_state.mousepos.x, next_state.mousepos.y) in self.cheese_locations:
             return -100
-        elif self.grid.snack_time(next_state):
+        elif self.snack_time(next_state):
             return 100
         else: # pressure cat to go after mouse
-            return -5
+            return 0
         
 
     def game_over(self, state, cat_action, mouse_action):
@@ -217,6 +260,6 @@ class TJGame(object):
 
 
 if __name__ == "__main__":
-    game_info_calc = TJGame(True, False, load_from_file=False, game_info_prefix="TJGame1", cheese_locations={})
+    game_info_calc = TJGame(False, True, load_from_file=False, game_info_prefix="TJGame1", cheese_locations={})
     #game_info_calc = TJGame(False, False, load_from_file=True, game_info_prefix="TJGame1", cheese_locations={})
     game_info_calc.print_board_positions()
