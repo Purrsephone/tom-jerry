@@ -9,6 +9,7 @@ from itertools import zip_longest
 from tom_and_jerry_project.msg import QLearningReward, RobotCoord, GameState
 from fake_data import * 
 import copy 
+from itertools import product
 
 # Given an index and info about map, compute its real coordinate
 # returns an array [x, y]
@@ -106,76 +107,132 @@ class Grid:
 
         # get origin coordinates
         #HARD CODE FOR NOW 
-        x_origin = -10
-        y_origin = -10 
+        # x_origin = -10
+        # y_origin = -10 
         #x_origin = self.map.info.origin.position.x
         #y_origin = self.map.info.origin.position.y
      
         # delimeters for chopping space into squares
-        delim = (self.square_side_len/2)/resolution
-        delim2 = int(self.square_side_len/resolution)
+        # delim = (self.square_side_len/2)/resolution
+        # delim2 = int(self.square_side_len/resolution)
+
+        # get a 2d array x by y where each entry is ((real_x, real_y), valid) TODO: Implement origin and delim/reso ???
+        x_coors_array = math.ceil(width / self.square_side_len)
+        y_coors_array = math.ceil(height / self.square_side_len)
+
+        coors_array = [[None]*y_coors_array] * x_coors_array
+
+        def get_midpoint(x, y, edge):
+            x_mid = x*self.square_side_len+.5*self.square_side_len
+            y_mid = y*self.square_side_len+.5*self.square_side_len
+            if edge == 'x':
+                x_mid = x*self.square_side_len+.5*(width - x*self.square_side_len)
+            elif edge == 'y':
+                y_mid = y*self.square_side_len+.5*(height - y*self.square_side_len)
+            elif edge == 'xy':
+                x_mid = x*self.square_side_len+.5*(width - x*self.square_side_len)
+                y_mid = y*self.square_side_len+.5*(height - y*self.square_side_len)
+            return (x_mid, y_mid)
+
+        def get_valid(x,y, edge):
+            x_end = x*self.square_side_len+self.square_side_len
+            y_end = y*self.square_side_len+self.square_side_len
+            if edge == 'x':
+                x_end = width
+            elif edge == 'y':
+                y_end = height
+            elif edge == 'xy':
+                x_end = width
+                y_end = height
+            for x in range(x*self.square_side_len, x_end):
+                for y in range(y*self.square_side_len, y_end):
+                    ind = x + y*width
+                    if self.map.data[ind] > 0:
+                        return False
+            return True
+
+        # set real midpoint coordintes and valid state
+        for x in range(x_coors_array):
+            for y in range(y_coors_array):
+                if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
+                elif x == x_coors_array-1: edge = 'x'
+                elif y == y_coors_array-1: edge = 'y'
+                coors_array[x,y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
+
+        # get all possible states ((tom_coors_x, tom_coors_y, tom_coors_z), (jerry_coors_x, jerry_coors_y, jerry_coors_z))
+        possible_states_single = []
+
+        for x in range(x_coors_array):
+            for y in range(y_coors_array):
+                if coors_array[x,y][1] == True:
+                    possible_states_single.append((x,y))
+
+        possible_states_double = list(product(possible_states_single, 2))
+        possible_states_all = list(product(possible_states_double, [0,1,2,3]))
+
+
 
         # get list of indexes (flatten 2D array into 1D array)
-        flat_map = []
-        for i in range(width):
-            for j in range(height):
-                indx = (i*width+j)
-                flat_map.append(indx)
+        # flat_map = []
+        # for i in range(width):
+        #     for j in range(height):
+        #         indx = (i*width+j)
+        #         flat_map.append(indx)
 
         # regroup indexes into groups of size delim2
         # temp_squares = self.group_elements(delim2, flat_map)
-        temp_squares = [flat_map[n:n+delim2] for n in range(0, len(flat_map), delim2)]
+        # temp_squares = [flat_map[n:n+delim2] for n in range(0, len(flat_map), delim2)]
 
         # keep only the midpoint of the square
-        for square in temp_squares:
-            for cell in square:
-                if (cell != 0) and (cell % delim-1 == 0) and (cell % delim2-1 != 0):
-                    self.squares.append(cell)
+        # for square in temp_squares:
+        #     for cell in square:
+        #         if (cell != 0) and (cell % delim-1 == 0) and (cell % delim2-1 != 0):
+        #             self.squares.append(cell)
 
         # convert indexes into real coordinates
-        for el in self.squares:
-            coord = convert_to_real_coords(el, height, x_origin, y_origin, resolution)
-            indx = self.squares.index(el)
-            self.squares[indx] = [el, coord]
+        # for el in self.squares:
+        #     coord = convert_to_real_coords(el, height, x_origin, y_origin, resolution)
+        #     indx = self.squares.index(el)
+        #     self.squares[indx] = [el, coord]
 
-        valid_squares = []
+        # valid_squares = []
         # remove any invalid squares from our list of squares
-        for el in self.squares:
-            indx = el[0]
+        # for el in self.squares:
+        #     indx = el[0]
             #should be self.map.data[indx] but hard coding in alt for now 
             #if(self.map.data[indx] == 0):
-            if(map_data[indx] == 0):
-                el.pop(0)
+            # if(map_data[indx] == 0):
+            #     el.pop(0)
                 # package coordinates plus orientation into Position class
-                sqr = Position(el[0][0], el[0][1], -1)
-                valid_squares.append(sqr)
+                # sqr = Position(el[0][0], el[0][1], -1)
+                # valid_squares.append(sqr)
 
         # now we should have a states list with only valid square midpoints, yay!
         # permuate the possible states based on the squares and orientations
-        state_list = []
-        print("BEFORE PERMUTING DIRECTIONS")
-        print(len(valid_squares))
-        for square in valid_squares:
-            for x in range(4):
-                temp_sqr = copy.deepcopy(square)
-                temp_sqr.z = x
-                state_list.append(temp_sqr)
-        print("BEFORE PAIRING UP CAT MOUSE")
-        print(len(state_list))
-        # make the state include all possible combos of tom and jerry positions
-        num_states = len(state_list)
-        outer_loop_counter = 0
-        for state in state_list:
-            inner_loop_counter = 0
-            for state2 in state_list:
-                tom = state_list[outer_loop_counter]
-                jerry = state_list[inner_loop_counter]
-                new_state = State(tom, jerry)
-                self.states.append(new_state)
-                inner_loop_counter += 1
-            outer_loop_counter += 1
-        print("AFTER PAIRING")
-        print(len(self.states))
+        # state_list = []
+        # print("BEFORE PERMUTING DIRECTIONS")
+        # print(len(valid_squares))
+        # for square in valid_squares:
+        #     for x in range(4):
+        #         temp_sqr = copy.deepcopy(square)
+        #         temp_sqr.z = x
+        #         state_list.append(temp_sqr)
+        # print("BEFORE PAIRING UP CAT MOUSE")
+        # print(len(state_list))
+        # # make the state include all possible combos of tom and jerry positions
+        # num_states = len(state_list)
+        # outer_loop_counter = 0
+        # for state in state_list:
+        #     inner_loop_counter = 0
+        #     for state2 in state_list:
+        #         tom = state_list[outer_loop_counter]
+        #         jerry = state_list[inner_loop_counter]
+        #         new_state = State(tom, jerry)
+        #         self.states.append(new_state)
+        #         inner_loop_counter += 1
+        #     outer_loop_counter += 1
+        # print("AFTER PAIRING")
+        # print(len(self.states))
     # helper function, checks if it is possible for a single agent to move
     # from one state to the next
     def possible_transition_helper(self, state1, state2):
