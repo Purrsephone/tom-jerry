@@ -77,26 +77,17 @@ class Grid:
 
         self.run()
 
-    # helper function that groups elements into groups of size n
-    def group_elements(n, iterable, padvalue='x'):
-        return zip_longest(*[iter(iterable)]*n, fillvalue=padvalue)
-
     def get_map(self, data):
         self.map = data 
+
     # given an occupancy grid, get info from it used to cut space into squares
     def get_grid(self):
-        # get resolution, height, and width
-        #HARD CODE FOR NOW
+
         resolution = self.map.info.resolution
-        print("RES  BOI")
         print(resolution)
-        #HARD CODE FOR NOW 
         width = self.map.info.width
         height = self.map.info.height
         print(f"{width}:{height}")
-
-        # get origin coordinates
-        #HARD CODE FOR NOW 
         x_origin = self.map.info.origin.position.x
         y_origin = self.map.info.origin.position.y
         print(f"{x_origin},{y_origin}")
@@ -105,7 +96,7 @@ class Grid:
         x_coors_array = math.ceil(width / self.square_side_len)
         y_coors_array = math.ceil(height / self.square_side_len)
 
-        coors_array = np.array((x_coors_array, y_coors_array))
+        coors_array = np.zeros((x_coors_array, y_coors_array), dtype=(float,3))
         print(coors_array)
 
         def get_midpoint(x, y, edge):
@@ -138,8 +129,8 @@ class Grid:
                 for y in range(y*self.square_side_len, y_end):
                     ind = x + y*width
                     if self.map.data[ind] != 0:
-                        return False
-            return True
+                        return 0
+            return 1
 
         # set real midpoint coordintes and valid state
         for x in range(x_coors_array):
@@ -150,7 +141,9 @@ class Grid:
                 if x == x_coors_array-1 and y == y_coors_array-1: edge = 'xy'
                 elif x == x_coors_array-1: edge = 'x'
                 elif y == y_coors_array-1: edge = 'y'
-                coors_array[x][y] = (get_midpoint(x, y, edge), get_valid(x, y, edge))
+                x_mid, y_mid = get_midpoint(x, y, edge)
+
+                coors_array[x][y] = (x_mid, y_mid, get_valid(x, y, edge))
                 print(coors_array[x][y])
 
         self.coors_array = coors_array
